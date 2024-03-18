@@ -1,51 +1,32 @@
 const mongoose = require('mongoose');
-const annSupervisorSchema = new mongoose.Schema(
-    {
 
-        userID:{
-            type:String,
-            required:true
+const annSupervisorSchema = new mongoose.Schema({
+  anntitle: {
+    type: String,
+    required: true,
+  },
+  uploaddate: {
+    type: Date, // Changed to Date for better date handling
+    required: true,
+  },
+  Type: {
+    type: String,
+    required: true,
+  },
+  expiredate: {
+    type: Date, // Changed to Date for better date handling
+    required: true,
+  },
+  upload: {
+    type: String, // Path or URL to the uploaded file
+    // Not required unless you want every announcement to include a file
+  },
+  Description: {
+    type: String,
+    required: true,
+  },
+});
 
-        },
-    
-        firstName:{
-            type:String,
-            required:true,
-        },
-        LastName:{
-            type:String,
-            required:true,
-        },
-        email:{
-            type:String,
-            required:true,
-        },
-        phoneNumber:{
-            type:String,
-            required:true,
-        },
-        website:{
-            type:String,
-            required:true,
-        },
-        specialization:{
-            type:String,
-            required:true,
-        },
-        experiance:{
-            type:String,
-            required:true,
-        },
-        feePerConsult:{
-            type:Number,
-            required:true,
-        },
-        fromTime:{
-            type:String,
-            required:true,
-        }
+const AnnHRSupervisorModel = mongoose.model("AnnHRSupervisor", annSupervisorSchema);
 
-    }
-
-)
-const AnnHRSupervisorModel= mongoose.model("doctors",annSupervisorSchema);
+module.exports = AnnHRSupervisorModel;
