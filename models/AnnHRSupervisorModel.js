@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const annSupervisorSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   anntitle: {
     type: String,
     required: true,
@@ -27,6 +27,6 @@ const annSupervisorSchema = new mongoose.Schema({
   },
 });
 
-const AnnHRSupervisorModel = mongoose.model("AnnHRSupervisor", annSupervisorSchema);
+const AnnHRSupervisorModel = mongoose.model("Announcement", userSchema);
 
 module.exports = AnnHRSupervisorModel;
