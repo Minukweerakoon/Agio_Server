@@ -1,12 +1,23 @@
- const express = require("express");
+const express = require("express");
 const app = express();
 require('dotenv').config()  // env configuration
 const dbConfig = require("./config/dbConfig");
 app.use(express.json());
 const userRoute = require("./routes/userRoute");
-const workoutRoutes= require('./routes/annWorkouts')//from routes
+
+const employeeRoute = require("./routes/employeeRoute")
+const leaveRoute = require("./routes/leaveRoute")
 
 app.use('/api/user', userRoute);
+app.use('/api/employee', employeeRoute);
+app.use('/api/leave', leaveRoute);
+
+
+
+const workoutRoutes= require('./routes/annWorkouts')//from routes
+
+
+
 const port = process.env.PORT || 5001;
 
 //announcement
