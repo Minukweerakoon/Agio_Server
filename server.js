@@ -5,8 +5,31 @@ const dbConfig = require("./config/dbConfig");
 app.use(express.json());
 const userRoute = require("./routes/userRoute");
 
+const employeeRoute = require("./routes/employeeRoute")
+const leaveRoute = require("./routes/leaveRoute")
+
 app.use('/api/user', userRoute);
-const port = process.env.PORT || 5000;
+app.use('/api/employee', employeeRoute);
+app.use('/api/leave', leaveRoute);
 
 
+
+const workoutRoutes= require('./routes/annWorkouts')//from routes
+
+
+
+const port = process.env.PORT || 5001;
+
+//announcement
+
+app.use((req,res,next)=>{
+    console.log(req.path,req.method)
+    next()
+ }) 
+ app.use('/api/annWorkouts',workoutRoutes)
+
+ 
+
+ 
+ 
 app.listen(port, () => console.log(`Nodemon Server started at port ${port}`));
