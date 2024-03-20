@@ -54,6 +54,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             res.status(200).send({  success: true, data: {
+                
                 username :employee.username_log
             } });
         }
