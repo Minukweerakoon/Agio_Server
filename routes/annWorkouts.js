@@ -5,23 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware");
 
- // Adjust the path as necessary
 
-// Middleware for logging request paths and methods
-// router.use((req, res, next) => {
-//     console.log(req.path, req.method);
-//     next();
-// });
-
-// GET all announcements
-// router.get('/', async (req, res) => {
-//     try {
-//         const announcements = await AnnHRSupervisorModel.find();
-//         res.status(200).json(announcements);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
 
 // POST a new announcement
 router.post('/AnnHRsup', async (req, res) => {
@@ -36,51 +20,50 @@ router.post('/AnnHRsup', async (req, res) => {
     }
 });
 
+//read
+router.get('/getAnnHRsup', async (req, res) => {
+    try {
+        const announcements = await Announcement.find();
+        if (!announcements || announcements.length === 0) {
+            return res.status(404).send({ message: "No announcements found.", success: false });
+        }
+        res.status(200).send({ announcements, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+    }
+});
+// Update an announcement
+router.put('/updateAnnHRsup/:id', async (req, res) => {
+    try {
+        const announcement = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!announcement) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({ message: "Announcement updated successfully", success: true, announcement });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to update announcement.", success: false, error });
+    }
+});
 
-// // GET a specific announcement by ID
-// router.get('/:id', getAnnouncement, (req, res) => {
-//     res.json(res.announcement);
-// });
+// DELETE an announcement
+router.delete('/deleteAnnHRsup/:id', async (req, res) => {
+    try {
+        const announcement = await Announcement.findByIdAndDelete(req.params.id);
+        if (!announcement) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({ message: "Announcement deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete announcement.", success: false, error });
+    }
+});
 
-// // UPDATE a specific announcement by ID
-// router.patch('/:id', getAnnouncement, async (req, res) => {
-//     if (req.body.name != null) {
-//         res.announcement.name = req.body.name;
-//     }
-//     // Add other properties here as necessary
 
-//     try {
-//         const updatedAnnouncement = await res.announcement.save();
-//         res.json(updatedAnnouncement);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
 
-// // DELETE a specific announcement by ID
-// router.delete('/:id', getAnnouncement, async (req, res) => {
-//     try {
-//         await res.announcement.remove();
-//         res.json({ message: 'Deleted Announcement' });
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
 
-// // Middleware to get announcement by ID
-// async function getAnnouncement(req, res, next) {
-//     let announcement;
-//     try {
-//         announcement = await AnnHRSupervisorModel.findById(req.params.id);
-//         if (announcement == null) {
-//             return res.status(404).json({ message: 'Cannot find announcement' });
-//         }
-//     } catch (error) {
-//         return res.status(500).json({ message: error.message });
-//     }
 
-//     res.announcement = announcement;
-//     next();
-// }
 
 module.exports = router;
