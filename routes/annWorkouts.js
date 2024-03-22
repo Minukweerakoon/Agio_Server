@@ -36,16 +36,17 @@ router.get('/getAnnHRsup', async (req, res) => {
 // Update an announcement
 router.put('/updateAnnHRsup/:id', async (req, res) => {
     try {
-        const announcement = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!announcement) {
-            return res.status(404).send({ message: "Announcement not found.", success: false });
+        const { id } = req.params;
+        const updatedAnnouncement = await Announcement.findByIdAndUpdate(id, req.body, { new: true });
+        if(!updatedAnnouncement) {
+            return res.status(404).json({ success: false, message: "Announcement not found." });
         }
-        res.status(200).send({ message: "Announcement updated successfully", success: true, announcement });
+        res.json({ success: true, message: "Announcement updated successfully.", announcement: updatedAnnouncement });
     } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to update announcement.", success: false, error });
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
 });
+
 
 // DELETE an announcement
 router.delete('/deleteAnnHRsup/:id', async (req, res) => {
