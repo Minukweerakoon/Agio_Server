@@ -20,7 +20,6 @@ router.post('/AnnHRsup', async (req, res) => {
     }
 });
 
-//read
 router.get('/getAnnHRsup', async (req, res) => {
     try {
         const announcements = await Announcement.find();
@@ -31,6 +30,21 @@ router.get('/getAnnHRsup', async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+    }
+});
+
+//read
+router.get('/getAnnHRsup2/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const announcement = await Announcement.findById(id);
+        if (!announcement) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({ announcement, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
     }
 });
 // Update an announcement
