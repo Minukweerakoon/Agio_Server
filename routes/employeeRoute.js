@@ -53,13 +53,21 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
         if (!employee) {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
-            res.status(200).send({  success: true, data: {
-                
-                username :employee.username_log
+            // Extract isAdmin value from the employee document
+            const isAdmin = employee.isAdmin;
+            const isDoctor = employee.isDoctor;
+
+            // Send response with isAdmin value and other data
+            res.status(200).send({ success: true, data: { 
+                isAdmin: isAdmin,
+                isDoctor :isDoctor,
+                username: employee.username_log,
+                fullname:employee.fname,
+                password : employee.password_log
+                // Include other necessary fields here
             } });
         }
     } catch (error) {
-        
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });

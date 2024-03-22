@@ -11,6 +11,7 @@ module.exports = async (req, res, next) => {
                 });
             } else {
                 req.body.userId = decoded._id;
+                req.body.isAdmin = decoded.isAdmin;
                 next();
             }
         });

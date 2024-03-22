@@ -50,6 +50,16 @@ const userSchema = new mongoose.Schema({
         default:false,
 
     },
+    isAnnHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
+    isLeaveHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
     seenNotifications:{
         type :Array,
         default:[],
