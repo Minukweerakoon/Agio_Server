@@ -60,6 +60,31 @@ const userSchema = new mongoose.Schema({
         default:false,
 
     },
+    islogisticsMan:{
+        type:Boolean,
+        default:false,
+
+    },
+    isuniform:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinsu:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinquiry:{
+        type:Boolean,
+        default:false,
+
+    },
+    isperfomace:{
+        type:Boolean,
+        default:false,
+
+    },
     seenNotifications:{
         type :Array,
         default:[],
