@@ -2,15 +2,18 @@ const express = require("express");
 const router = express.Router();
 const Inquiry = require('../models/inquiryModel');
 
-router.post("/inquiry", async (req, res) => {
+
+router.post('/inquiry', async (req, res) => {
     try {
-        const newInquiry = new Inquiry(req.body);
-        await newInquiry.save();
-        res.status(200).send({ message: "Inquiry submission successful.", success: true });
+        
+        const inquiry = new Inquiry (req.body);
+        await inquiry.save();
+        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
     } catch (error) {
-        console.error("Error processing inquiry:", error); // Log the error
-        res.status(500).send({ message: "Inquiry submission unsuccessful.", success: false, error });
+        console.log(error)
+        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
     }
 });
+
 
 module.exports = router;
