@@ -25,6 +25,6 @@ const userSchema = new mongoose.Schema({
   
 });
 
-const AnnHRSupervisorModel = mongoose.model("Transport", userSchema);
+const TransportModel = mongoose.model("Transport", userSchema);
 
-module.exports = AnnHRSupervisorModel;
+module.exports = TransportModel;
