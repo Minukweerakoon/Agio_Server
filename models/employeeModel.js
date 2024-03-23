@@ -39,6 +39,60 @@ const userSchema = new mongoose.Schema({
     address: {
         type: String,
         required: true
+    },
+    isDoctor:{
+        type:Boolean,
+        default:false,
+
+    },
+    isAdmin:{
+        type:Boolean,
+        default:false,
+
+    },
+    isAnnHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
+    isLeaveHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
+    islogisticsMan:{
+        type:Boolean,
+        default:false,
+
+    },
+    isuniform:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinsu:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinquiry:{
+        type:Boolean,
+        default:false,
+
+    },
+    isperfomace:{
+        type:Boolean,
+        default:false,
+
+    },
+    seenNotifications:{
+        type :Array,
+        default:[],
+    },
+    unseenNotifications:{
+        type :Array,
+        default:[],
+
     }
 }, {
     timestamps: true
