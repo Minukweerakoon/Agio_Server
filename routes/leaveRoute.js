@@ -19,5 +19,18 @@ router.post("/leaveHRsup", async (req, res) => {
     }
 });
 
+router.get('/getAnnHRsup', async (req, res) => {
+    try {
+        const announcements = await Announcement.find();
+        if (!announcements || announcements.length === 0) {
+            return res.status(404).send({ message: "No announcements found.", success: false });
+        }
+        res.status(200).send({ announcements, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+    }
+});
+
 
 module.exports = router;
