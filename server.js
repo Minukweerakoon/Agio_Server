@@ -7,7 +7,7 @@ const userRoute = require("./routes/userRoute");
 const workoutRoutes= require('./routes/annWorkouts')//from routes
 
 app.use('/api/user', userRoute);
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 //announcement
 
