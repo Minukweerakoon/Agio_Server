@@ -6,7 +6,7 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 
-router.post("/leaveHRsup", async (req, res) => {
+router.post("/leaveEmpform", async (req, res) => {
     try {
         
         const newLeave = new Leave(req.body); // Use User model for consistency
@@ -19,16 +19,16 @@ router.post("/leaveHRsup", async (req, res) => {
     }
 });
 
-router.get('/getAnnHRsup', async (req, res) => {
+router.get('/getleave', async (req, res) => {
     try {
-        const announcements = await Announcement.find();
-        if (!announcements || announcements.length === 0) {
-            return res.status(404).send({ message: "No announcements found.", success: false });
+        const leave = await Leave.find();
+        if (!leave || leave.length === 0) {
+            return res.status(404).send({ message: "No leave details found.", success: false });
         }
-        res.status(200).send({ announcements, success: true });
+        res.status(200).send({ leave, success: true });
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
     }
 });
 

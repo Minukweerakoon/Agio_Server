@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
+const Leave = require('../models/leaveModel');
 
 router.post("/Main_register", async (req, res) => {
     try {
@@ -80,6 +81,31 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
         }
     } catch (error) {
         res.status(500).send({ message: "Error getting user info", success: false, error });
+    }
+});
+router.post("/leaveEmpform", async (req, res) => {
+    try {
+        const newleave = new Leave({...req.body ,status :"pending"})
+        await newleave.save();
+        const hrsup = await Employee.findOne({isLeaveHrsup:true})
+        const unseenNotifications = hrsup.unseenNotifications
+        unseenNotifications.push({
+            type:"New leave request",
+            message :`${ newleave.name} has submitted a leave request`,
+            data:{
+                leaveid:newleave._id,
+                name: newleave.name
+            },
+            onclickpath:"/"
+
+        }
+
+        )
+
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
     }
 });
 
