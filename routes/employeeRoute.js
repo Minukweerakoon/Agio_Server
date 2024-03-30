@@ -83,7 +83,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
-router.post("/leaveEmpform", async (req, res) => {
+router.post("/leaveEmpform", authMiddleware2, async (req, res) => {
     try {
         const newleave = new Leave({...req.body ,status :"pending"})
         await newleave.save();
@@ -101,6 +101,13 @@ router.post("/leaveEmpform", async (req, res) => {
         }
 
         )
+        await Employee.findByIdAndUpdate(hrsup._id,{unseenNotifications});
+        res.status(200).send(
+            {
+                success:true,
+                 message: "Leave submission successful.",
+            }
+        );
 
         
     } catch (error) {
