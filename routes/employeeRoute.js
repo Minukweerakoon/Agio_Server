@@ -186,5 +186,6 @@ router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
     }
 });
+module.exports = router;
 
 
