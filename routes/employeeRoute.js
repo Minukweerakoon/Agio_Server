@@ -144,10 +144,13 @@ router.get('/getleave', async (req, res) => {
 });
 router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
     try {
-        const user = await Employee.findOne({userid: req.body.userid})
-        const unseenNotifications = user.seenNotifications;
+        const user = await Employee.findOne({_id: req.body.userid})
+        const unseenNotifications = user.unseenNotifications;
+        const seenNotifications = user.seenNotifications;
+        seenNotifications.push(...unseenNotifications);
         user.unseenNotifications = [];
-        const updateduser = await Employee.findOne(user.userid,user);
+        user.seenNotifications = seenNotifications;
+        const updateduser = await user.save()
         updateduser.password_log = undefined;
         res.status(200).send(
             {
@@ -166,15 +169,15 @@ router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
 });
 router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
     try {
-        const user = await Employee.findOne({userid: req.body.userid})
+        const user = await Employee.findOne({_id: req.body.userid})
        user.seenNotifications = [];
         user.unseenNotifications = [];
-        const updateduser = await Employee.findOne(user.userid,user);
+        const updateduser = await user.save();
         updateduser.password_log = undefined;
         res.status(200).send(
             {
                 success:true,
-                message : "All notifications marked as seen.",
+                message : "All notifications are deleted.",
                 data:updateduser,
             }
         )
