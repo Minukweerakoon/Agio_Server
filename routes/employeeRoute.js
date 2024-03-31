@@ -142,49 +142,49 @@ router.get('/getleave', async (req, res) => {
     }
 
 });
-// router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
-//     try {
-//         const user = await Employee.findOne({userid: req.body.userid})
-//         const unseenNotifications = user.seenNotifications;
-//         user.unseenNotifications = [];
-//         const updateduser = await Employee.findOne(user.userid,user);
-//         updateduser.password_log = undefined;
-//         res.status(200).send(
-//             {
-//                 success:true,
-//                 message : "All notifications marked as seen.",
-//                 data:updateduser,
-//             }
-//         )
+router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
+    try {
+        const user = await Employee.findOne({userid: req.body.userid})
+        const unseenNotifications = user.seenNotifications;
+        user.unseenNotifications = [];
+        const updateduser = await Employee.findOne(user.userid,user);
+        updateduser.password_log = undefined;
+        res.status(200).send(
+            {
+                success:true,
+                message : "All notifications marked as seen.",
+                data:updateduser,
+            }
+        )
         
 
         
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
-//     }
-// });
-// router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
-//     try {
-//         const user = await Employee.findOne({userid: req.body.userid})
-//        user.seenNotifications = [];
-//         user.unseenNotifications = [];
-//         const updateduser = await Employee.findOne(user.userid,user);
-//         updateduser.password_log = undefined;
-//         res.status(200).send(
-//             {
-//                 success:true,
-//                 message : "All notifications marked as seen.",
-//                 data:updateduser,
-//             }
-//         )
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
+router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
+    try {
+        const user = await Employee.findOne({userid: req.body.userid})
+       user.seenNotifications = [];
+        user.unseenNotifications = [];
+        const updateduser = await Employee.findOne(user.userid,user);
+        updateduser.password_log = undefined;
+        res.status(200).send(
+            {
+                success:true,
+                message : "All notifications marked as seen.",
+                data:updateduser,
+            }
+        )
         
 
         
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
-//     }
-// });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
 
 
