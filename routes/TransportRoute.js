@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const booking = require('../models/TransportModel');
+const Dregister = require('../models/TraDriverModel');
+const Vregister = require('../models/TraVehicleModule')
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -34,7 +36,7 @@ router.get('/getTraBooking', async (req, res) => {
 });
 
  //read
- router.get('/getTraBooking2/:id', async (req, res) => {
+ /*router.get('/getTraBooking2/:id', async (req, res) => {
      try {
          const { id } = req.params;
         const Booking = await booking.findById(id);
@@ -46,7 +48,7 @@ router.get('/getTraBooking', async (req, res) => {
          console.log(error);
          res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
      }
- });
+ });*/
  // Update an announcement
  /*router.put('/updateTraBooking/:id', async (req, res) => {
      try {
@@ -77,7 +79,31 @@ router.get('/getTraBooking', async (req, res) => {
 // });
 
 
+// Driver Register
+router.post('/Driveregister', async (req, res) => {
+    try {
+        
+        const DriverRegister = new Dregister (req.body);
+        await DriverRegister.save();
+        res.status(200).send({ message: "Booking uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
 
+// vehicle Register
+router.post('/Vehicleregister', async (req, res) => {
+    try {
+        
+        const VehicleRegister = new Vregister (req.body);
+        await VehicleRegister.save();
+        res.status(200).send({ message: "Booking uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
 
 
 
