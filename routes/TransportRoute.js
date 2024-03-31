@@ -24,11 +24,11 @@ router.post('/TraBooking', async (req, res) => {
 
 router.get('/getTraBooking', async (req, res) => {
     try {
-        const Booking = await booking.find(); // Use Booking instead of booking
-        if (!Booking || Booking.length === 0) {
+        const bookings = await booking.find(); 
+        if (!bookings || bookings.length === 0) {
             return res.status(404).send({ message: "No Booking found.", success: false });
         }
-        res.status(200).send({ Booking, success: true });
+        res.status(200).send({ bookings, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
