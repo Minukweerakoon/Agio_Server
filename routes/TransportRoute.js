@@ -36,32 +36,33 @@ router.get('/getTraBooking', async (req, res) => {
 });
 
  //read
- /*router.get('/getTraBooking2/:id', async (req, res) => {
+ router.get('/getTraBooking2/:id', async (req, res) => {
      try {
          const { id } = req.params;
-        const Booking = await booking.findById(id);
-         if (!Booking) {
+        const bookings = await booking.findById(id);
+         if (!bookings) {
              return res.status(404).send({ message: "Announcement not found.", success: false });
          }
-         res.status(200).send({ Booking, success: true });
+         res.status(200).send({bookings, success: true });
      } catch (error) {
          console.log(error);
          res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
      }
- });*/
+ });
+
  // Update an announcement
- /*router.put('/updateTraBooking/:id', async (req, res) => {
+ router.put('/updateTraBooking/:id', async (req, res) => {
      try {
          const { id } = req.params;
         const updatedbooking = await booking.findByIdAndUpdate(id, req.body, { new: true });
          if(!updatedbooking) {
              return res.status(404).json({ success: false, message: "Booking not found." });
          }
-         res.json({ success: true, message: "Booking updated successfully.", announcement: updatedAnnouncement });
+         res.json({ success: true, message: "Booking updated successfully.", bookings: updatedbooking });
      } catch (error) {
          res.status(500).json({ success: false, message: "Internal server error." });
      }
- });*/
+ });
 
 
 // // DELETE an announcement
@@ -83,12 +84,26 @@ router.get('/getTraBooking', async (req, res) => {
 router.post('/Driveregister', async (req, res) => {
     try {
         
-        const DriverRegister = new Dregister (req.body);
-        await DriverRegister.save();
+        const Dregisters = new Dregister (req.body);
+        await Dregisters.save();
         res.status(200).send({ message: "Booking uploaded Successfully", success: true });
     } catch (error) {
         console.log(error)
         res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
+
+// Driver details read
+router.get('/getDrivers', async (req, res) => {
+    try {
+        const Dregisters = await Dregister.find(); 
+        if (!Dregisters || Dregisters.length === 0) {
+            return res.status(404).send({ message: "No Booking found.", success: false });
+        }
+        res.status(200).send({ Dregisters, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
     }
 });
 
