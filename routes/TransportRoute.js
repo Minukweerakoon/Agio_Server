@@ -66,7 +66,7 @@ router.get('/getTraBooking', async (req, res) => {
 });
 
 
-// // DELETE Booking
+// DELETE Booking
  router.delete('/deletebooking/:id', async (req, res) => {
     try {
         const Booking = await booking.findByIdAndDelete(req.params.id);
@@ -165,6 +165,18 @@ router.get('/getVehicles', async (req, res) => {
     }
 });
 
-
+// DELETE Booking
+router.delete('/deleteVehicle/:id', async (req, res) => {
+    try {
+        const vehicle = await Vregister.findByIdAndDelete(req.params.id);
+        if (!vehicle) {
+            return res.status(404).send({ message: "Vehicle not found.", success: false });
+        }
+        res.status(200).send({ message: "Vehicle deleted successfully", success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
+    }
+});
 
 module.exports = router;
