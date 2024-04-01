@@ -39,18 +39,18 @@ router.get('/getTraBooking', async (req, res) => {
  router.get('/getTraBooking2/:id', async (req, res) => {
      try {
          const { id } = req.params;
-        const bookings = await booking.findById(id);
-         if (!bookings) {
+        const Booking = await booking.findById(id);
+         if (!Booking) {
              return res.status(404).send({ message: "Announcement not found.", success: false });
          }
-         res.status(200).send({bookings, success: true });
+         res.status(200).send({Booking, success: true });
      } catch (error) {
          console.log(error);
          res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
      }
  });
 
- // Update an announcement
+ // Update an Booking
  router.put('/updateTraBooking/:id', async (req, res) => {
      try {
          const { id } = req.params;
@@ -58,7 +58,7 @@ router.get('/getTraBooking', async (req, res) => {
          if(!updatedbooking) {
              return res.status(404).json({ success: false, message: "Booking not found." });
          }
-         res.json({ success: true, message: "Booking updated successfully.", bookings: updatedbooking });
+         res.json({ success: true, message: "Booking updated successfully.", Booking: updatedbooking });
      } catch (error) {
          res.status(500).json({ success: false, message: "Internal server error." });
      }
@@ -107,6 +107,8 @@ router.get('/getDrivers', async (req, res) => {
     }
 });
 
+
+
 // vehicle Register
 router.post('/Vehicleregister', async (req, res) => {
     try {
@@ -117,6 +119,18 @@ router.post('/Vehicleregister', async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
+router.get('/getVehicles', async (req, res) => {
+    try {
+        const Vregisters = await Vregister.find(); 
+        if (!Vregisters || Vregisters.length === 0) {
+            return res.status(404).send({ message: "No Booking found.", success: false });
+        }
+        res.status(200).send({ Vregisters, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
     }
 });
 
