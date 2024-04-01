@@ -8,9 +8,13 @@ const userRoute = require("./routes/userRoute");
 const employeeRoute = require("./routes/employeeRoute")
 const leaveRoute = require("./routes/leaveRoute")
 
+const uniformOrderRoute = require('./routes/UniformOrderRoute');
+const UniformOrder = require('./models/UniformOrderModel');
+
 app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
+app.use('/api/uniform-orders', uniformOrderRoute);
 
 
 
