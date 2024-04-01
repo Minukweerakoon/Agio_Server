@@ -126,16 +126,17 @@ router.get('/getDrivers', async (req, res) => {
 // DELETE Drivers
 router.delete('/deleteDriver/:id', async (req, res) => {
     try {
-        const deletedDriver = await Dregister.findByIdAndDelete(req.params.id);
-         if (!deletedDriver) {
-             return res.status(404).send({ message: "Driver not found.", success: false });
-         }
-         res.status(200).send({ message: "Driver deleted successfully", success: true });
-     } catch (error) {
-         console.error(error);
-         res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
-     }
- });
+        const { id } = req.params;
+        const deletedDriver = await Dregister.findByIdAndDelete(id);
+        if (!deletedDriver) {
+            return res.status(404).send({ message: "Driver not found.", success: false });
+        }
+        res.status(200).send({ message: "Driver deleted successfully", success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
+    }
+});
 
 
 // vehicle Register
