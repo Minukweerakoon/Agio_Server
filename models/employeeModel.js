@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         
     },
+    empid: {
+        type: String,
+        required: true,
+        unique: true
+        
+    },
     jobRole: {
         type: String,
         required: true
