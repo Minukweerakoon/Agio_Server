@@ -52,32 +52,33 @@ router.get('/getTraBooking', async (req, res) => {
 
  // Update an Booking
  router.put('/updateTraBooking/:id', async (req, res) => {
-     try {
-         const { id } = req.params;
-        const updatedbooking = await booking.findByIdAndUpdate(id, req.body, { new: true });
-         if(!updatedbooking) {
-             return res.status(404).json({ success: false, message: "Booking not found." });
+    try {
+        const { id } = req.params;
+        const updatedBooking = await booking.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedBooking) {
+            return res.status(404).json({ success: false, message: "Booking not found." });
+        }
+        res.status(200).json({ success: true, message: "Booking updated successfully.", booking: updatedBooking });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+
+// // DELETE Booking
+ router.delete('/deletebooking/:id', async (req, res) => {
+    try {
+        const Booking = await booking.findByIdAndDelete(req.params.id);
+         if (!Booking) {
+             return res.status(404).send({ message: "Booking not found.", success: false });
          }
-         res.json({ success: true, message: "Booking updated successfully.", Booking: updatedbooking });
+         res.status(200).send({ message: "Booking deleted successfully", success: true });
      } catch (error) {
-         res.status(500).json({ success: false, message: "Internal server error." });
+         console.log(error);
+         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
      }
  });
-
-
-// // DELETE an announcement
-// router.delete('/deletebooking/:id', async (req, res) => {
-//     try {
-//         const booking = await booking.findByIdAndDelete(req.params.id);
-//         if (!booking) {
-//             return res.status(404).send({ message: "Booking not found.", success: false });
-//         }
-//         res.status(200).send({ message: "Booking deleted successfully", success: true });
-//     } catch (error) {
-//         console.log(error);
-//         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
-//     }
-// });
 
 
 // Driver Register
@@ -107,6 +108,34 @@ router.get('/getDrivers', async (req, res) => {
     }
 });
 
+ //read
+ router.get('/getDrivers2/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+       const drivers = await Dregister.findById(id);
+        if (!drivers) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({drivers, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
+    }
+});
+
+// DELETE Drivers
+router.delete('/deleteDriver/:id', async (req, res) => {
+    try {
+        const deletedDriver = await Dregister.findByIdAndDelete(req.params.id);
+         if (!deletedDriver) {
+             return res.status(404).send({ message: "Driver not found.", success: false });
+         }
+         res.status(200).send({ message: "Driver deleted successfully", success: true });
+     } catch (error) {
+         console.error(error);
+         res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
+     }
+ });
 
 
 // vehicle Register
@@ -121,6 +150,7 @@ router.post('/Vehicleregister', async (req, res) => {
         res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
     }
 });
+// vehicle details read
 router.get('/getVehicles', async (req, res) => {
     try {
         const Vregisters = await Vregister.find(); 
