@@ -7,7 +7,7 @@ const userRoute = require("./routes/userRoute");
 
 const employeeRoute = require("./routes/employeeRoute")
 const leaveRoute = require("./routes/leaveRoute")
-
+const authMiddleware2 = require("./middleware/authMiddleware2");
 app.use('/api/user', userRoute);
 
 app.use('/api/employee', employeeRoute);
@@ -15,7 +15,9 @@ app.use('/api/leave', leaveRoute);
 
 
 
-const workoutRoutes= require('./routes/annWorkouts')//from routes
+
+const workoutRoutes= require('./routes/annWorkouts');//from routes
+
 
 
 

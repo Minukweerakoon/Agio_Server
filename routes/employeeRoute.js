@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
+const Leave = require('../models/leaveModel');
 
 router.post("/Main_register", async (req, res) => {
     try {
@@ -74,7 +75,9 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 unseenNotifications,
                 username: employee.username_log,
                 fullname:employee.fname,
-                password : employee.password_log
+                password : employee.password_log,
+                userid: employee._id
+
                 // Include other necessary fields here
             } });
         }
@@ -82,5 +85,110 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
+router.post("/leaveEmpform", authMiddleware2, async (req, res) => {
+    try {
+        const newleave = new Leave({...req.body ,status :"pending"})
+        await newleave.save();
+        const hrsup = await Employee.findOne({isLeaveHrsup:true})
+        const unseenNotifications = hrsup.unseenNotifications
+        unseenNotifications.push({
+            type:"New leave request",
+            message :`${ newleave.name} has submitted a leave request`,
+            data:{
+                leaveid:newleave._id,
+                name: newleave.name
+            },
+            onclickpath:"/"
 
+        }
+
+        )
+        await Employee.findByIdAndUpdate(hrsup._id,{unseenNotifications});
+        res.status(200).send(
+            {
+                success:true,
+                 message: "Leave submission successful.",
+            }
+        );
+
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
+
+router.get('/getleave', async (req, res) => {
+    try {
+        const userid = req.query.userid; // Extract userId from query parameter
+        let leave;
+        
+        if (userid) {
+            // If userId is provided, filter leave details by userId
+            leave = await Leave.find({ userid });
+        } else {
+            // If userId is not provided, fetch all leave details
+            leave = await Leave.find();
+        }
+
+        if (!leave || leave.length === 0) {
+            return res.status(404).send({ message: "No leave details found.", success: false });
+        }
+        
+        res.status(200).send({ leave, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
+    }
+
+});
+router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
+    try {
+        const user = await Employee.findOne({_id: req.body.userid})
+        const unseenNotifications = user.unseenNotifications;
+        const seenNotifications = user.seenNotifications;
+        seenNotifications.push(...unseenNotifications);
+        user.unseenNotifications = [];
+        user.seenNotifications = seenNotifications;
+        const updateduser = await user.save()
+        updateduser.password_log = undefined;
+        res.status(200).send(
+            {
+                success:true,
+                message : "All notifications marked as seen.",
+                data:updateduser,
+            }
+        )
+        
+
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
+router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
+    try {
+        const user = await Employee.findOne({_id: req.body.userid})
+       user.seenNotifications = [];
+        user.unseenNotifications = [];
+        const updateduser = await user.save();
+        updateduser.password_log = undefined;
+        res.status(200).send(
+            {
+                success:true,
+                message : "All notifications are deleted.",
+                data:updateduser,
+            }
+        )
+        
+
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
 module.exports = router;
+
+
