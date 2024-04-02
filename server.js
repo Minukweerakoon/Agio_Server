@@ -12,7 +12,7 @@ const inquiryRoute = require("./routes/inquiryRoute")
 app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
-app.use('/api/inquiry', inquiryRoute);
+app.use('/api/inquiry/', inquiryRoute);
 
 
 
