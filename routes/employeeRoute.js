@@ -142,11 +142,72 @@ router.get('/getleave', async (req, res) => {
     }
 
 });
+router.get('/getleave2/:userid', async (req, res) => {
+    try {
+        const { userid } = req.params;
+        const user = await Employee.findOne({ _id: userid });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found.", success: false });
+        }
+
+        const leave = await Leave.find({ userid });
+
+        if (!leave || leave.length === 0) {
+            return res.status(404).json({ message: "No leave requests found for this user.", success: false });
+        }
+
+        res.status(200).json({ leave, success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to retrieve leave information.", success: false, error });
+    }
+});
+
+
+
+router.post('/change_status', async (req, res) => {
+    try {
+        const{leaveid,status,userid} = req.body;
+        const newleave = await Leave.findByIdAndUpdate(leaveid,{
+            status,
+        });
+      
+const user = await Employee.findOne({_id: userid});
+const unseenNotifications = user.unseenNotifications
+        unseenNotifications.push({
+            type:"New leave request changed",
+            message :`Your request has been ${status}`,
+            data:{
+                leaveid:newleave._id,
+                name: newleave.name,
+                onClickPath: "/Main_notifications"
+            },
+            onclickpath:"/"
+
+        }
+
+        )
+        await Employee.findByIdAndUpdate(user._id,{unseenNotifications});
+       
+        res.status(200).send({
+            message:"Doctor status updated successfully",
+            success : true,
+            data: newleave,
+
+
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
+    }
+
+});
 router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
     try {
         const user = await Employee.findOne({_id: req.body.userid})
-        const unseenNotifications = user.unseenNotifications;
-        const seenNotifications = user.seenNotifications;
+        const unseenNotifications = user?.unseenNotifications;
+        const seenNotifications = user?.seenNotifications;
         seenNotifications.push(...unseenNotifications);
         user.unseenNotifications = [];
         user.seenNotifications = seenNotifications;
@@ -189,6 +250,20 @@ router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
     }
 });
+
+router.delete('/deleteleave/:id', async (req, res) => {
+    try {
+        const leave = await Leave.findByIdAndDelete(req.params.id);
+        if (!leave) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ message: "Leave deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete leave request.", success: false, error });
+    }
+});
+
 module.exports = router;
 
 

@@ -32,5 +32,18 @@ router.get('/getleave', async (req, res) => {
     }
 });
 
+router.delete('/deleteleave/:id', async (req, res) => {
+    try {
+        const leave = await Leave.findByIdAndDelete(req.params.id);
+        if (!leave) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ message: "Leave deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete leave request.", success: false, error });
+    }
+});
+
 
 module.exports = router;
