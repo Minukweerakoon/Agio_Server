@@ -58,7 +58,7 @@ router.get('/getTraBooking', async (req, res) => {
         if (!updatedBooking) {
             return res.status(404).json({ success: false, message: "Booking not found." });
         }
-        res.status(200).json({ success: true, message: "Booking updated successfully.", booking: updatedBooking });
+        res.status(200).json({ success: true, message: "Booking updated successfully.", Booking: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -97,11 +97,11 @@ router.post('/Driveregister', async (req, res) => {
 // Driver details read
 router.get('/getDrivers', async (req, res) => {
     try {
-        const Dregisters = await Dregister.find(); 
-        if (!Dregisters || Dregisters.length === 0) {
+        const drivers = await Dregister.find(); 
+        if (!drivers || drivers.length === 0) {
             return res.status(404).send({ message: "No Booking found.", success: false });
         }
-        res.status(200).send({ Dregisters, success: true });
+        res.status(200).send({ drivers, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
@@ -112,8 +112,8 @@ router.get('/getDrivers', async (req, res) => {
  router.get('/getDrivers2/:id', async (req, res) => {
     try {
         const { id } = req.params;
-       const drivers = await Dregister.findById(id);
-        if (!drivers) {
+       const Dregisters = await Dregister.findById(id);
+        if (!Dregisters) {
             return res.status(404).send({ message: "Announcement not found.", success: false });
         }
         res.status(200).send({drivers, success: true });
@@ -123,20 +123,58 @@ router.get('/getDrivers', async (req, res) => {
     }
 });
 
-// DELETE Drivers
+
+// Update Driver
+router.put('/updateDriver/:id', async (req, res) => {
+   try {
+       const { id } = req.params;
+       const updateDriver = await Dregister.findByIdAndUpdate(id, req.body, { new: true });
+       if (!updateDriver) {
+           return res.status(404).json({ success: false, message: "Booking not found." });
+       }
+       res.status(200).json({ success: true, message: "Booking updated successfully.", Dregisters: updateDriver });
+   } catch (error) {
+       console.error(error);
+       res.status(500).json({ success: false, message: "Internal server error." });
+   }
+});
+
+
+// DELETE Driver
 router.delete('/deleteDriver/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedDriver = await Dregister.findByIdAndDelete(id);
-        if (!deletedDriver) {
-            return res.status(404).send({ message: "Driver not found.", success: false });
+   try {
+       const Driver = await Dregister.findByIdAndDelete(req.params.id);
+        if (!Driver) {
+            return res.status(404).send({ message: "Booking not found.", success: false });
         }
-        res.status(200).send({ message: "Driver deleted successfully", success: true });
+        res.status(200).send({ message: "Booking deleted successfully", success: true });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // vehicle Register
@@ -165,18 +203,6 @@ router.get('/getVehicles', async (req, res) => {
     }
 });
 
-// DELETE Booking
-router.delete('/deleteVehicle/:id', async (req, res) => {
-    try {
-        const vehicle = await Vregister.findByIdAndDelete(req.params.id);
-        if (!vehicle) {
-            return res.status(404).send({ message: "Vehicle not found.", success: false });
-        }
-        res.status(200).send({ message: "Vehicle deleted successfully", success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
-    }
-});
+
 
 module.exports = router;
