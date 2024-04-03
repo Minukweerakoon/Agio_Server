@@ -51,7 +51,7 @@ router.get('/getTraBooking', async (req, res) => {
  });
 
  // Update an Booking
-// Update an Booking
+
 router.put('/updateTraBooking/:id', async (req, res) => {
     try {
       const { id } = req.params;
@@ -59,7 +59,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
       if (!updatedBooking) {
         return res.status(404).json({ success: false, message: "Booking not found." });
       }
-      res.status(200).json({ success: true, message: "Booking updated successfully.", booking: updatedBooking });
+      res.status(200).json({ success: true, message: "Booking updated successfully.", Booking: updatedBooking });
     } catch (error) {
       console.error(error);
       res.status(500).json({ success: false, message: "Internal server error." });
@@ -82,6 +82,13 @@ router.put('/updateTraBooking/:id', async (req, res) => {
  });
 
 
+
+
+
+
+
+
+
 // Driver Register
 router.post('/Driveregister', async (req, res) => {
     try {
@@ -95,54 +102,55 @@ router.post('/Driveregister', async (req, res) => {
     }
 });
 
-router.get('/getdriver', async (req, res) => {
+// read driver register
+router.get('/getdrivers', async (req, res) => {
     try {
-        const register = await Dregister.find(); 
-        if (!register || register.length === 0) {
+        const drivers = await Dregister.find(); 
+        if (!drivers || drivers.length === 0) {
             return res.status(404).send({ message: "No Booking found.", success: false });
         }
-        res.status(200).send({ register, success: true });
+        res.status(200).send({ drivers, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
     }
 });
 
- //read
- router.get('/getdriver2/:id', async (req, res) => {
-     try {
-         const { id } = req.params;
-        const Dregisters = await Dregister.findById(id);
-         if (!Dregisters) {
-             return res.status(404).send({ message: "Announcement not found.", success: false });
-         }
-         res.status(200).send({Dregisters, success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
-     }
- });
-
- // Update an Booking
- router.put('/updatedriver/:id', async (req, res) => {
+//read
+router.get('/getdrivers2/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedrivers = await Dregister.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updatedrivers) {
-            return res.status(404).json({ success: false, message: "Booking not found." });
+       const Dregisters = await Dregister.findById(id);
+        if (!Dregisters) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
         }
-        res.status(200).json({ success: true, message: "Booking updated successfully.", Booking: updatedBooking });
+        res.status(200).send({Dregisters, success: true });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error." });
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
     }
 });
 
+// Update Driver
 
-// DELETE Booking
- router.delete('/deletedriver/:id', async (req, res) => {
+router.put('/updatedrivers/:id', async (req, res) => {
+   try {
+     const { id } = req.params;
+     const updatedDrivers = await Dregister.findByIdAndUpdate(id, req.body, { new: true });
+     if (!updatedDrivers) {
+       return res.status(404).json({ success: false, message: "Booking not found." });
+     }
+     res.status(200).json({ success: true, message: "Booking updated successfully.", Dregisters: updatedDrivers });
+   } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Internal server error." });
+   }
+ });
+
+// DELETE Driver
+router.delete('/deletedrivers/:id', async (req, res) => {
     try {
-        const Dregisters = await booking.findByIdAndDelete(req.params.id);
+        const Dregisters = await Dregister.findByIdAndDelete(req.params.id);
          if (!Dregisters) {
              return res.status(404).send({ message: "Booking not found.", success: false });
          }
@@ -153,28 +161,7 @@ router.get('/getdriver', async (req, res) => {
      }
  });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
@@ -192,20 +179,64 @@ router.post('/Vehicleregister', async (req, res) => {
         res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
     }
 });
-// vehicle details read
+
+// read Vehicle register
 router.get('/getVehicles', async (req, res) => {
     try {
-        const Vregisters = await Vregister.find(); 
-        if (!Vregisters || Vregisters.length === 0) {
+        const vehicles = await Vregister.find(); 
+        if (!vehicles || vehicles.length === 0) {
             return res.status(404).send({ message: "No Booking found.", success: false });
         }
-        res.status(200).send({ Vregisters, success: true });
+        res.status(200).send({ vehicles, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
     }
 });
 
+ //read
+ router.get('/getVehicles2/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+       const VehicleRegister = await Vregister.findById(id);
+        if (!VehicleRegister) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({VehicleRegister, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
+    }
+});
+
+// Update Vehicle
+
+router.put('/updatevehicles/:id', async (req, res) => {
+   try {
+     const { id } = req.params;
+     const updatedvehicles = await Vregister.findByIdAndUpdate(id, req.body, { new: true });
+     if (!updatedvehicles) {
+       return res.status(404).json({ success: false, message: "Booking not found." });
+     }
+     res.status(200).json({ success: true, message: "Booking updated successfully.", VehicleRegister: updatedvehicles });
+   } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Internal server error." });
+   }
+ });
 
 
+ // DELETE Vehicle
+ router.delete('/deletevehicles/:id', async (req, res) => {
+    try {
+        const VehicleRegister = await Vregister.findByIdAndDelete(req.params.id);
+         if (!VehicleRegister) {
+             return res.status(404).send({ message: "Booking not found.", success: false });
+         }
+         res.status(200).send({ message: "Booking deleted successfully", success: true });
+     } catch (error) {
+         console.log(error);
+         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
+     }
+ });
 module.exports = router;

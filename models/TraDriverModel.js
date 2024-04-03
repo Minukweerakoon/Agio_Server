@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   
-  driPnum: {
+    driPnum: {
     type: String,
     required: true,
   },
