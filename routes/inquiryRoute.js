@@ -15,7 +15,7 @@ router.post('/inquiry', async (req, res) => {
     }
 });
 
-router.get('/my-inqiries', async (req, res) => {
+router.get('/my-inquiries', async (req, res) => {
     try {
       const inquiries = await Inquiry.find();
       res.status(200).json(inquiries);
@@ -26,15 +26,15 @@ router.get('/my-inqiries', async (req, res) => {
   });
 
   // Express route to fetch inquiries based on username
-app.get('my-inquiries/:username', async (req, res) => {
-    try {
-      const inquiries = await Inquiry.find({ username: req.params.username });
-      res.json(inquiries);
-    } catch (error) {
-      console.error('Error fetching inquiries:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+// app.get('my-inquiries/:username', async (req, res) => {
+//     try {
+//       const inquiries = await Inquiry.find({ username: req.params.username });
+//       res.json(inquiries);
+//     } catch (error) {
+//       console.error('Error fetching inquiries:', error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   });
   
   
 
