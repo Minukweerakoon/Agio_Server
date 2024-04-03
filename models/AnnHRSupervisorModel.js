@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  userid:{
+    type: String,
+    required: true
+
+  },
   anntitle: {
     type: String,
     required: true,
