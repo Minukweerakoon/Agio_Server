@@ -164,6 +164,43 @@ router.get('/getleave2/:userid', async (req, res) => {
     }
 });
 
+router.get('/getleave3/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const leave = await Leave.findById(id);
+        if (!leave) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ leave, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the leave.", success: false, error });
+    }
+});
+
+router.put('/updateleave/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, Type, RangePicker, department, Description } = req.body;
+
+        // Assuming Announcement is a Mongoose model
+        const updatedleave = await Leave.findByIdAndUpdate(
+            id,
+            { name, Type, RangePicker, department, Description },
+            { new: true } // To return the updated document
+        );
+
+        if (!updatedleave) {
+            return res.status(404).json({ success: false, message: "Leave not found." });
+        }
+
+        res.json({ success: true, message: "Leave updated successfully.", leave: updatedleave });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 
 
 router.post('/change_status', async (req, res) => {
