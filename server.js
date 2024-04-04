@@ -7,10 +7,16 @@ const userRoute = require("./routes/userRoute");
 
 const employeeRoute = require("./routes/employeeRoute")
 const leaveRoute = require("./routes/leaveRoute")
+
 const authMiddleware2 = require("./middleware/authMiddleware2");
+
+const inquiryRoute = require("./routes/inquiryRoute")
+
+
 app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
+app.use('/api/inquiry/', inquiryRoute);
 
 
 
