@@ -48,21 +48,10 @@ router.post("/Main_login", async (req, res) => {
     }
 });
 
-router.get('/employee/:id', async (req, res) => {
-    const { id } = req.params;
-
+router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
     try {
-        // Fetch insurance data by EmployeeID
-        const insurance = await Insurance.findOne({ id });
-        if (!insurance) {
-            console.error("Insurance data not found for EmployeeID:", id);
-            return res.status(404).json({ message: "Insurance data not found" });
-        }
-        
-        // Fetch employee's username based on the EmployeeID
-        const employee = await Employee.findOne({ _id: id });
+        const employee = await Employee.findOne({ _id: req.body.employeeId });
         if (!employee) {
-
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             // Extract isAdmin value from the employee document
@@ -95,17 +84,6 @@ router.get('/employee/:id', async (req, res) => {
         }
     } catch (error) {
         res.status(500).send({ message: "Error getting user info", success: false, error });
-
-            console.error("Employee not found for EmployeeID:", id);
-            return res.status(404).json({ message: "Employee not found", success: false });
-        }
-        
-        // Send response with insurance data and employee's username
-        res.json({ success: true, insurance, username: employee.username_log });
-    } catch (error) {
-        console.error("Error fetching insurance data:", error);
-        res.status(500).json({ message: "Failed to fetch insurance data", error });
-
     }
 });
 router.post("/leaveEmpform", authMiddleware2, async (req, res) => {
