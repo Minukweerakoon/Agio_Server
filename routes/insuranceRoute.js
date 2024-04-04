@@ -6,9 +6,9 @@ const upload = require('../middleware/upload')
 router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
     try {
         const { name, id, phoneNumber } = req.body;
-        const file = req.file.filename; // Get the filename of the uploaded file
+        const file = req.file.filename; 
 
-        const newInsurance = new Insurance({ name, id, phoneNumber, file }); // Include file in the Insurance model
+        const newInsurance = new Insurance({ name, id, phoneNumber, file }); 
         await newInsurance.save();
         
         res.status(200).send({ message: "Claim submission successful.", success: true });
@@ -18,6 +18,19 @@ router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
     }
 });
 
-router,get('/')
-s
+router.get('/employee/:EmployeeID', async (req, res) => {
+    const { EmployeeID } = req.params;
+  
+    try {
+      const employee = await EmployeeModel.findOne({ EmployeeID });
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      
+      res.json(employee);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch employee", error });
+    }
+});
+
 module.exports = router;
