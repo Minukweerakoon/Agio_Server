@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         
     },
+    empid: {
+        type: String,
+        
+        unique: true
+        
+    },
     jobRole: {
         type: String,
         required: true
@@ -39,7 +45,73 @@ const userSchema = new mongoose.Schema({
     address: {
         type: String,
         required: true
-    }
+    },
+    isDoctor:{
+        type:Boolean,
+        default:false,
+
+    },
+    isAdmin:{
+        type:Boolean,
+        default:false,
+
+    },
+    isAnnHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
+    isLeaveHrsup:{
+        type:Boolean,
+        default:false,
+
+    },
+    islogisticsMan:{
+        type:Boolean,
+        default:false,
+
+    },
+    isuniform:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinsu:{
+        type:Boolean,
+        default:false,
+
+    },
+    isinquiry:{
+        type:Boolean,
+        default:false,
+
+    },
+    isperfomace:{
+        type:Boolean,
+        default:false,
+
+    },
+    seenNotifications:{
+        type :Array,
+        default:[],
+    },
+    unseenNotifications:{
+        type :Array,
+        default:[],
+
+    },
+    medical_leave: {
+        type: Number,
+        default: 4// Default value for the medical_leave field
+    },
+    general_leave: {
+        type: Number,
+        default: 6// Default value for the medical_leave field
+    },
+    annual_leave: {
+        type: Number,
+        default: 10// Default value for the medical_leave field
+    },
 }, {
     timestamps: true
 });
