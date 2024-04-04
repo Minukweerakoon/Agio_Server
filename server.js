@@ -7,6 +7,12 @@ const userRoute = require("./routes/userRoute");
 
 const employeeRoute = require("./routes/employeeRoute")
 const leaveRoute = require("./routes/leaveRoute")
+const insuranceRoute = require("./routes/insuranceRoute");
+
+const authMiddleware2 = require("./middleware/authMiddleware2");
+
+const inquiryRoute = require("./routes/inquiryRoute")
+
 
 const UniformOrderRoute = require("./routes/UniformOrderRoute")
 
@@ -15,9 +21,15 @@ app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/UniformOrder', UniformOrderRoute);
 
+app.use('/api/inquiry/', inquiryRoute);
 
 
-const workoutRoutes= require('./routes/annWorkouts')//from routes
+app.use('/api/insurance', insuranceRoute)
+
+
+
+const workoutRoutes= require('./routes/annWorkouts');//from routes
+
 
 
 
