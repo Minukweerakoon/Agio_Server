@@ -36,18 +36,7 @@ const userSchema = new mongoose.Schema({
 
 
     },
-    medical_leave: {
-        type: Number,
-        default: 4// Default value for the medical_leave field
-    },
-    general_leave: {
-        type: Number,
-        default: 6// Default value for the medical_leave field
-    },
-    annual_leave: {
-        type: Number,
-        default: 10// Default value for the medical_leave field
-    },
+    
 
   
    

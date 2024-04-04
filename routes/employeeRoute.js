@@ -302,34 +302,34 @@ router.delete('/deleteleave/:id', async (req, res) => {
     }
 });
 
-router.post('/approveleave/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
+// router.post('/approveleave/:id', async (req, res) => {
+//     try {
+//         const { id } = req.params;
         
-        const updatedleave = await Leave.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
-        if (!updatedleave) {
-            return res.status(404).json({ success: false, message: "Leave not found." });
-        }
+//         const updatedleave = await Leave.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
+//         if (!updatedleave) {
+//             return res.status(404).json({ success: false, message: "Leave not found." });
+//         }
 
-        // If the leave type is "Medical" and the status is approved, deduct one from the medical_leave field
-        if (updatedleave.Type === 'Medical') {
-            const user = await Employee.findOne({ userid: updatedleave.userid });
-            if (!user) {
-                return res.status(404).json({ success: false, message: "User not found." });
-            }
+//         // If the leave type is "Medical" and the status is approved, deduct one from the medical_leave field
+//         if (updatedleave.Type === 'Medical') {
+//             const user = await Employee.findOne({ userid: updatedleave.userid });
+//             if (!user) {
+//                 return res.status(404).json({ success: false, message: "User not found." });
+//             }
 
-            // Deduct one from the medical_leave field
-            user.medical_leave -= 1;
+//             // Deduct one from the medical_leave field
+//             user.medical_leave -= 1;
 
-            // Save the updated user data
-            await user.save();
-        }
+//             // Save the updated user data
+//             await user.save();
+//         }
         
-        res.json({ success: true, message: "Leave approved successfully.", leave: updatedleave });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Internal server error." });
-    }
-});
+//         res.json({ success: true, message: "Leave approved successfully.", leave: updatedleave });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: "Internal server error." });
+//     }
+// });
 router.post('/deduct_medical_leave', async (req, res) => {
     try {
         const { userid } = req.body;
@@ -341,7 +341,7 @@ router.post('/deduct_medical_leave', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Employee not found.' });
         }
 
-        // Decrement the medical_leave field by one
+        // Deduct one from the medical_leave field
         employee.medical_leave -= 1;
 
         // Save the updated employee document
