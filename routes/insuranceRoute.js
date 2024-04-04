@@ -18,19 +18,20 @@ router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
     }
 });
 
-router.get('/employee/:EmployeeID', async (req, res) => {
-    const { EmployeeID } = req.params;
-  
-    try {
-      const employee = await EmployeeModel.findOne({ EmployeeID });
-      if (!employee) {
-        return res.status(404).json({ message: "Employee not found" });
+router.get('/employee/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+
+      const insurance = await Insurance.findOne({ id });
+      if (!insurance) {
+          return res.status(404).json({ message: "Insurance data not found" });
       }
       
-      res.json(employee);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch employee", error });
-    }
+      res.json(insurance);
+  } catch (error) {
+      res.status(500).json({ message: "Failed to fetch insurance data", error });
+  }
 });
 
 module.exports = router;
