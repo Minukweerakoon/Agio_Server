@@ -2,43 +2,28 @@ const mongoose = require('mongoose');
 
 
 const userSchema = new mongoose.Schema({
-    userid:{
-        type: String,
-        required: true,
-
-    },
     name: {
         type: String,
         required: true
     },
-    RangePicker: {
-        type: [Array],
+    username: {
+        type: String,
         required: true
     },
-    Type: {
+    inquirydate: {
+        type: Date,
+        required: true,
+        
+    },
+    phoneNumber: {
         type: String,
         required: true,
         
     },
-    department: {
-        type: String,
-        required: true,
-        
-    },
-    
-    Description: {
+    describe: {
         type: String,
         required: true
     },
-    status:{
-        type:String,
-        default:"pending",
-
-
-    },
-    
-
-  
    
 }, {
     timestamps: true
@@ -46,5 +31,5 @@ const userSchema = new mongoose.Schema({
 
 
 
-const leaveModel = mongoose.model("Leave", userSchema);
-module.exports = leaveModel;
+const inquiryModel = mongoose.model("Inquiry", userSchema);
+module.exports = inquiryModel;
