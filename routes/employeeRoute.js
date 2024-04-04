@@ -209,20 +209,16 @@ router.post('/AnnHRsup', authMiddleware2, async (req, res) => {
             onclickpath: "/" // Update this path as necessary
         };
         
-        // Define roles that should receive the announcement
-        const roles = ['isAdmin', 'isDoctor', 'isAnnHrsup', 'isLeaveHrsup', 'islogisticsMan', 'isuniform', 'isinsu', 'isinquiry', 'isperfomace'];
+        // Update all employees with the new notification
+        await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
         
-        // Find employees with any of the roles set to true and update their unseenNotifications
-        await Promise.all(roles.map(async (role) => {
-            await Employee.updateMany({ [role]: true }, { $push: { unseenNotifications: notification } });
-        }));
-        
-        res.status(200).send({ message: "Announcement uploaded successfully and notifications sent.", success: true });
+        res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true });
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
+
 
 
 
