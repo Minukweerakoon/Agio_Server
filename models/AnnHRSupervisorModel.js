@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   Department: {
     type: String,
-    required: true,
+    required: false,
   },
   expiredate: {
     type: Date, // Changed to Date for better date handling
