@@ -369,10 +369,10 @@ router.post("/TraBooking", authMiddleware2, async (req, res) => {
         const unseenNotifications = logistic.unseenNotifications
         unseenNotifications.push({
             type:"New leave request",
-            message :`${ Booking.name} has submitted a leave request`,
+            message :`${ Booking.EmpName} has submitted a leave request`,
             data:{
                 bookingid:Booking._id,
-                name: Booking.EmpName
+                name: Booking.EmpName,
             },
             onclickpath:"/"
 
@@ -526,11 +526,12 @@ const unseenNotifications = user.unseenNotifications
 });
 
 
+
 // DELETE Booking
  router.delete('/deletebooking/:id', async (req, res) => {
     try {
-        const Booking = await booking.findByIdAndDelete(req.params.id);
-         if (!Booking) {
+        const bookings = await booking.findByIdAndDelete(req.params.id);
+         if (!bookings) {
              return res.status(404).send({ message: "Booking not found.", success: false });
          }
          res.status(200).send({ message: "Booking deleted successfully", success: true });
