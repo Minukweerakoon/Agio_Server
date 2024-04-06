@@ -361,81 +361,169 @@ router.post('/deduct_medical_leave', async (req, res) => {
 /////////////////////////////////////////// Transport ////////////////////////////////////////////////////////////////
 
 // POST a new Booking
-router.post('/TraBooking', async (req, res) => {
+router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
-        
-        const Booking = new booking (req.body);
+        const Booking = new booking({...req.body ,status :"pending"})
         await Booking.save();
-        const logA = await Employee.findOne({islogisticsMan:true})
-        const unseenNotifications = logA.unseenNotifications
+        const logistic = await Employee.findOne({islogisticsMan:true})
+        const unseenNotifications = logistic.unseenNotifications
         unseenNotifications.push({
             type:"New leave request",
-            message :`${ Booking.name} has submitted a Booking request`,
+            message :`${ Booking.name} has submitted a leave request`,
             data:{
-                leaveid:Booking._id,
-                name: Booking.name
+                bookingid:Booking._id,
+                name: Booking.EmpName
             },
             onclickpath:"/"
 
         }
 
         )
-        await Employee.findByIdAndUpdate(logA._id,{unseenNotifications});
+        await Employee.findByIdAndUpdate(logistic._id,{unseenNotifications});
         res.status(200).send(
             {
                 success:true,
                  message: "Leave submission successful.",
             }
         );
+
+        
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+        console.error(error);
+        res.status(500).send({ message: "Error Submitting leave request", success: false, error });
     }
 });
 
+// read Admin
 router.get('/getTraBooking', async (req, res) => {
     try {
-        const bookings = await booking.find(); 
-        if (!bookings || bookings.length === 0) {
-            return res.status(404).send({ message: "No Booking found.", success: false });
+        const userid = req.query.userid; // Extract userId from query parameter
+        let bookings;
+        
+        if (userid) {
+            // If userId is provided, filter leave details by userId
+            bookings = await booking.find({ userid });
+        } else {
+            // If userId is not provided, fetch all leave details
+            bookings = await booking.find();
         }
+
+        if (!bookings || bookings.length === 0) {
+            return res.status(404).send({ message: "No leave details found.", success: false });
+        }
+        
         res.status(200).send({ bookings, success: true });
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: "Failed to retrieve Booking.", success: false, error });
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
+    }
+
+});
+
+// read User
+
+router.get('/getTraBooking3/:userid', async (req, res) => {
+    try {
+        const { userid } = req.params;
+        const user = await Employee.findOne({ _id: userid });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found.", success: false });
+        }
+
+        const bookings = await booking.find({ userid });
+
+        if (!bookings || bookings.length === 0) {
+            return res.status(404).json({ message: "No leave requests found for this user.", success: false });
+        }
+
+        res.status(200).json({ bookings, success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to retrieve leave information.", success: false, error });
     }
 });
 
- //read
- router.get('/getTraBooking2/:id', async (req, res) => {
-     try {
-         const { id } = req.params;
+// read update part
+router.get('/getTraBooking2/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
         const Booking = await booking.findById(id);
-         if (!Booking) {
-             return res.status(404).send({ message: "Announcement not found.", success: false });
-         }
-         res.status(200).send({Booking, success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
-     }
- });
+        if (!Booking) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ Booking, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the leave.", success: false, error });
+    }
+});
 
- // Update an Booking
+
+// Update an Booking
 
 router.put('/updateTraBooking/:id', async (req, res) => {
     try {
-      const { id } = req.params;
-      const updatedBooking = await booking.findByIdAndUpdate(id, req.body, { new: true });
-      if (!updatedBooking) {
-        return res.status(404).json({ success: false, message: "Booking not found." });
-      }
-      res.status(200).json({ success: true, message: "Booking updated successfully.", Booking: updatedBooking });
+        const { id } = req.params;
+        const { EmpName, EmpEmail, Type, bookingdate, Details } = req.body;
+
+        // Assuming Announcement is a Mongoose model
+        const updatedBooking = await booking.findByIdAndUpdate(
+            id,
+            { EmpName, EmpEmail, Type, bookingdate, Details },
+            { new: true } // To return the updated document
+        );
+
+        if (!updatedBooking) {
+            return res.status(404).json({ success: false, message: "Leave not found." });
+        }
+
+        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: "Internal server error." });
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
-  });
+});
+ 
+ 
+
+router.post('/change_status', async (req, res) => {
+    try {
+        const{bookingid,status,userid} = req.body;
+        const Booking = await booking.findByIdAndUpdate(bookingid,{
+            status,
+        });
+      
+const user = await Employee.findOne({_id: userid});
+const unseenNotifications = user.unseenNotifications
+        unseenNotifications.push({
+            type:"New leave request changed",
+            message :`Your request has been ${status}`,
+            data:{
+                bookingid:Booking._id,
+                name: Booking.EmpName,
+                onClickPath: "/Main_notifications"
+            },
+            onclickpath:"/"
+
+        }
+
+        )
+        await Employee.findByIdAndUpdate(user._id,{unseenNotifications});
+       
+        res.status(200).send({
+            message:"Leave status updated successfully",
+            success : true,
+            data: newleave,
+
+
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
+    }
+
+});
 
 
 // DELETE Booking
