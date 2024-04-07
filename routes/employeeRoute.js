@@ -17,7 +17,7 @@ router.post("/Main_register", async (req, res) => {
 
         
 
-        const newEmployee = new Employee(req.body); // Use User model for consistency
+        const newEmployee = new Employee({...req.body,medical_leave : 4,general_leave: 6,annual_leave:10}); // Use User model for consistency
         await newEmployee.save();
 
         res.status(200).send({ message: "Employee registration successful.", success: true });
@@ -55,7 +55,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             // Extract isAdmin value from the employee document
-            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications } = employee;
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
 
 
 
@@ -73,6 +73,9 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 isperfomace,
                 seenNotifications,
                 unseenNotifications,
+                medical_leave,
+                annual_leave,
+                general_leave,
                 username: employee.username_log,
                 fullname:employee.fname,
                 password : employee.password_log,
@@ -142,11 +145,109 @@ router.get('/getleave', async (req, res) => {
     }
 
 });
+router.get('/getleave2/:userid', async (req, res) => {
+    try {
+        const { userid } = req.params;
+        const user = await Employee.findOne({ _id: userid });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found.", success: false });
+        }
+
+        const leave = await Leave.find({ userid });
+
+        if (!leave || leave.length === 0) {
+            return res.status(404).json({ message: "No leave requests found for this user.", success: false });
+        }
+
+        res.status(200).json({ leave, success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to retrieve leave information.", success: false, error });
+    }
+});
+
+router.get('/getleave3/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const leave = await Leave.findById(id);
+        if (!leave) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ leave, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the leave.", success: false, error });
+    }
+});
+
+router.put('/updateleave/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, Type, RangePicker, department, Description } = req.body;
+
+        // Assuming Announcement is a Mongoose model
+        const updatedleave = await Leave.findByIdAndUpdate(
+            id,
+            { name, Type, RangePicker, department, Description },
+            { new: true } // To return the updated document
+        );
+
+        if (!updatedleave) {
+            return res.status(404).json({ success: false, message: "Leave not found." });
+        }
+
+        res.json({ success: true, message: "Leave updated successfully.", leave: updatedleave });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+
+
+router.post('/change_status', async (req, res) => {
+    try {
+        const{leaveid,status,userid} = req.body;
+        const newleave = await Leave.findByIdAndUpdate(leaveid,{
+            status,
+        });
+      
+const user = await Employee.findOne({_id: userid});
+const unseenNotifications = user.unseenNotifications
+        unseenNotifications.push({
+            type:"New leave request changed",
+            message :`Your request has been ${status}`,
+            data:{
+                leaveid:newleave._id,
+                name: newleave.name,
+                onClickPath: "/Main_notifications"
+            },
+            onclickpath:"/"
+
+        }
+
+        )
+        await Employee.findByIdAndUpdate(user._id,{unseenNotifications});
+       
+        res.status(200).send({
+            message:"Leave status updated successfully",
+            success : true,
+            data: newleave,
+
+
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve leave details.", success: false, error });
+    }
+
+});
 router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
     try {
         const user = await Employee.findOne({_id: req.body.userid})
-        const unseenNotifications = user.unseenNotifications;
-        const seenNotifications = user.seenNotifications;
+        const unseenNotifications = user?.unseenNotifications;
+        const seenNotifications = user?.seenNotifications;
         seenNotifications.push(...unseenNotifications);
         user.unseenNotifications = [];
         user.seenNotifications = seenNotifications;
@@ -165,6 +266,75 @@ router.post("/mark_all_seen", authMiddleware2, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
+    }
+});
+router.post("/leavecountmed", authMiddleware2, async (req, res) => {
+    try {
+        
+
+        // Find the employee document by userid
+        const employee = await Employee.findOne({ _id: req.body.userid });
+
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee not found.' });
+        }
+
+        // Deduct one from the medical_leave field
+        employee.medical_leave -= 1;
+
+        // Save the updated employee document
+        await employee.save();
+
+        res.status(200).json({ success: true, message: 'Medical leave deducted successfully.', employee });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+router.post("/leavecountgeneral", authMiddleware2, async (req, res) => {
+    try {
+        
+
+        // Find the employee document by userid
+        const employee = await Employee.findOne({ _id: req.body.userid });
+
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee not found.' });
+        }
+
+        // Deduct one from the medical_leave field
+        employee.general_leave -= 1;
+
+        // Save the updated employee document
+        await employee.save();
+
+        res.status(200).json({ success: true, message: 'General leave deducted successfully.', employee });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+router.post("/leavecountannual", authMiddleware2, async (req, res) => {
+    try {
+        
+
+        // Find the employee document by userid
+        const employee = await Employee.findOne({ _id: req.body.userid });
+
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee not found.' });
+        }
+
+        // Deduct one from the medical_leave field
+        employee.annual_leave -= 1;
+
+        // Save the updated employee document
+        await employee.save();
+
+        res.status(200).json({ success: true, message: 'Annual leave deducted successfully.', employee });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
 router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
@@ -189,6 +359,90 @@ router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
         res.status(500).send({ message: "Error Submitting leave request", success: false, error });
     }
 });
+
+router.delete('/deleteleave/:id', async (req, res) => {
+    try {
+        const leave = await Leave.findByIdAndDelete(req.params.id);
+        if (!leave) {
+            return res.status(404).send({ message: "Leave not found.", success: false });
+        }
+        res.status(200).send({ message: "Leave deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete leave request.", success: false, error });
+    }
+});
+
+router.get('/total-medical-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalMedicalLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingMedicalLeave = (4 - employee.medical_leave);
+            console.log(remainingMedicalLeave )
+            totalMedicalLeaves += remainingMedicalLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalMedicalLeaves });
+    } catch (error) {
+        console.error('Error fetching total medical leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+router.get('/total-general-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalGeneralLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingMedicalLeave = (6 - employee.general_leave);
+            console.log(remainingMedicalLeave )
+            totalGeneralLeaves += remainingMedicalLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalGeneralLeaves });
+    } catch (error) {
+        console.error('Error fetching total general leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+router.get('/total-annual-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalAnnualLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingannualLeave = (10 - employee.annual_leave);
+            console.log(remainingannualLeave )
+            totalAnnualLeaves += remainingannualLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalAnnualLeaves });
+    } catch (error) {
+        console.error('Error fetching total annual leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
+
 module.exports = router;
+
+
 
 
