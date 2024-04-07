@@ -16,7 +16,7 @@ app.use('/api/leave', leaveRoute);
 
 
 
-//const workoutRoutes= require('./routes/annWorkouts');//from routes
+const workoutRoutes= require('./routes/annWorkouts');//from routes
 
 
 
@@ -30,7 +30,7 @@ app.use((req,res,next)=>{
     console.log(req.path,req.method)
     next()
  }) 
- //app.use('/api/annWorkouts',workoutRoutes)
+ app.use('/api/annWorkouts',workoutRoutes)
 
  
 
