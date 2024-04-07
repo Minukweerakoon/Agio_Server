@@ -5,11 +5,16 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+   
     vehicleNum: {
         type:String,
         required:true
     },
     ECDetails: {
+    type: String,
+    required: true,
+  },
+  location: {
     type: String,
     required: true,
   },
