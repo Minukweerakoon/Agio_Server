@@ -487,7 +487,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
  
  
 
-router.post('/change_status', async (req, res) => {
+router.post('/change_status_tra', async (req, res) => {
     try {
         const{bookingid,status,userid} = req.body;
         const Booking = await booking.findByIdAndUpdate(bookingid,{
@@ -514,7 +514,7 @@ const unseenNotifications = user.unseenNotifications
         res.status(200).send({
             message:"Leave status updated successfully",
             success : true,
-            data: newleave,
+            data: user,
 
 
         });
