@@ -373,32 +373,71 @@ router.delete('/deleteleave/:id', async (req, res) => {
     }
 });
 
+router.get('/total-medical-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalMedicalLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingMedicalLeave = (4 - employee.medical_leave);
+            console.log(remainingMedicalLeave )
+            totalMedicalLeaves += remainingMedicalLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalMedicalLeaves });
+    } catch (error) {
+        console.error('Error fetching total medical leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+router.get('/total-general-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalGeneralLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingMedicalLeave = (6 - employee.general_leave);
+            console.log(remainingMedicalLeave )
+            totalGeneralLeaves += remainingMedicalLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalGeneralLeaves });
+    } catch (error) {
+        console.error('Error fetching total general leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+router.get('/total-annual-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({} );
+
+        // Calculate total medical leaves for all employees
+        let totalAnnualLeaves = 0;
+        employees.forEach(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingannualLeave = (10 - employee.annual_leave);
+            console.log(remainingannualLeave )
+            totalAnnualLeaves += remainingannualLeave;
+        });
+
+        // Return total medical leaves
+        res.json({ totalAnnualLeaves });
+    } catch (error) {
+        console.error('Error fetching total annual leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
-
-// router.post("/leavecount", authMiddleware2, async (req, res) => {
-//     try {
-//         const { userid } = req.body;
-
-//         // Find the employee document by userid
-//         const employee = await Employee.findOne({ userid });
-
-//         if (!employee) {
-//             return res.status(404).json({ success: false, message: 'Employee not found.' });
-//         }
-
-//         // Deduct one from the medical_leave field
-//         employee.medical_leave -= 1;
-
-//         // Save the updated employee document
-//         await employee.save();
-
-//         res.status(200).json({ success: true, message: 'Medical leave deducted successfully.', employee });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ success: false, message: 'Internal server error.' });
-//     }
-// });
 
 
 
