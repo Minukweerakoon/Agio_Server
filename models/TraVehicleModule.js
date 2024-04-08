@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   
+  
 });
 
 const TraVehicleModel = mongoose.model("VehicleDetails", userSchema);
