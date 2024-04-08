@@ -16,4 +16,15 @@ router.post("/", async (req, res) => {
   }
 });
 
+// GET route for retrieving all uniform orders
+router.get("/", async (req, res) => {
+  try {
+    const uniformOrders = await UniformOrderModel.find();
+    res.status(200).json(uniformOrders);
+  } catch (error) {
+    console.error('Error fetching uniform orders:', error);
+    res.status(500).json({ message: "Failed to fetch uniform orders", success: false });
+  }
+});
+
 module.exports = router;
