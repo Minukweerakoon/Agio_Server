@@ -7,6 +7,8 @@ const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const Announcement = require('../models/AnnHRSupervisorModel');
+const upload = require('../middleware/upload');
+
 
 router.post("/Main_register", async (req, res) => {
     try {
@@ -305,39 +307,20 @@ router.delete('/deleteleave/:id', async (req, res) => {
     }
 });
 
-router.post('/approveleave/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const updatedleave = await Leave.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
-        if (!updatedleave) {
-            return res.status(404).json({ success: false, message: "Leave not found." });
-        }
 
-        // If the leave type is "Medical" and the status is approved, deduct one from the medical_leave field
-        if (updatedleave.Type === 'Medical') {
-            const user = await Employee.findOne({ userid: updatedleave.userid });
-            if (!user) {
-                return res.status(404).json({ success: false, message: "User not found." });
-            }
-
-            // Deduct one from the medical_leave field
-            user.medical_leave -= 1;
-
-            // Save the updated user data
-            await user.save();
-        }
-        
-        res.json({ success: true, message: "Leave approved successfully.", leave: updatedleave });
 
 //announcments
-
-router.post('/AnnHRsup', authMiddleware2, async (req, res) => {
+router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
-        // Save the new announcement
-        const announcement = new Announcement(req.body);
+        const file = req.file.filename
+        // Create a new announcement with the request body and file information
+        const announcement = new Announcement({
+            ...req.body, file 
+           // Assuming you might have multiple files in the future
+        });
+
         await announcement.save();
-        
+
         // Create the notification object
         const notification = {
             type: "New announcement update",
@@ -348,11 +331,11 @@ router.post('/AnnHRsup', authMiddleware2, async (req, res) => {
             },
             onclickpath: "/" // Update this path as necessary
         };
-        
+
         // Update all employees with the new notification
         await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
-        
-        res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true });
+
+        res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true, announcement });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
@@ -442,8 +425,9 @@ router.delete('/deleteAnnHRsup/:id', async (req, res) => {
 
 
 
+
 module.exports = router;
 
 
 
-
+    
