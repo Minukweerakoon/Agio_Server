@@ -6,6 +6,7 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const Announcement = require('../models/AnnHRSupervisorModel');
 
 router.post("/Main_register", async (req, res) => {
     try {
@@ -290,6 +291,7 @@ router.post("/delete_all_notifications", authMiddleware2, async (req, res) => {
     }
 });
 
+
 router.delete('/deleteleave/:id', async (req, res) => {
     try {
         const leave = await Leave.findByIdAndDelete(req.params.id);
@@ -327,10 +329,78 @@ router.post('/approveleave/:id', async (req, res) => {
         }
         
         res.json({ success: true, message: "Leave approved successfully.", leave: updatedleave });
+
+//announcments
+
+router.post('/AnnHRsup', authMiddleware2, async (req, res) => {
+    try {
+        // Save the new announcement
+        const announcement = new Announcement(req.body);
+        await announcement.save();
+        
+        // Create the notification object
+        const notification = {
+            type: "New announcement update",
+            message: `New announcement: ${announcement.anntitle}`,
+            data: {
+                announcementId: announcement._id,
+                announcementName: announcement.anntitle
+            },
+            onclickpath: "/" // Update this path as necessary
+        };
+        
+        // Update all employees with the new notification
+        await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
+        
+        res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+    }
+});
+
+
+
+
+router.get('/getAnnHRsup', async (req, res) => {
+    try {
+        const announcements = await Announcement.find();
+        if (!announcements || announcements.length === 0) {
+            return res.status(404).send({ message: "No announcements found.", success: false });
+        }
+        res.status(200).send({ announcements, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+    }
+});
+router.get('/getAnnHRsup2/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const announcement = await Announcement.findById(id);
+        if (!announcement) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({ announcement, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve the announcement.", success: false, error });
+    }
+});
+router.put('/updateAnnHRsup/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedAnnouncement = await Announcement.findByIdAndUpdate(id, req.body, { new: true });
+        if(!updatedAnnouncement) {
+            return res.status(404).json({ success: false, message: "Announcement not found." });
+        }
+        res.json({ success: true, message: "Announcement updated successfully.", announcement: updatedAnnouncement });
+
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal server error." });
     }
 });
+
 router.post('/deduct_medical_leave', async (req, res) => {
     try {
         const { userid } = req.body;
@@ -354,6 +424,23 @@ router.post('/deduct_medical_leave', async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
+
+
+router.delete('/deleteAnnHRsup/:id', async (req, res) => {
+    try {
+        const announcement = await Announcement.findByIdAndDelete(req.params.id);
+        if (!announcement) {
+            return res.status(404).send({ message: "Announcement not found.", success: false });
+        }
+        res.status(200).send({ message: "Announcement deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete announcement.", success: false, error });
+    }
+});
+
+
+
 
 module.exports = router;
 
