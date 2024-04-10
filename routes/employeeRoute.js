@@ -88,7 +88,8 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 username: employee.username_log,
                 fullname:employee.fname,
                 password : employee.password_log,
-                userid: employee._id
+                userid: employee._id,
+                empid :employee.empid
 
                 // Include other necessary fields here
             } });
@@ -468,7 +469,22 @@ router.get('/remaining-medical-leaves', async (req, res) => {
     }
 });
 
+router.post('/getemployeeinfobyuserid',  authMiddleware2, async (req, res) => {
+    try {
+        
+        const employee = await Employee.findOne({ _id: req.body.userid });
 
+        if (!employee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Return the employee details
+        res.json({ data: employee });
+    } catch (error) {
+        console.error('Error fetching employee details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 
