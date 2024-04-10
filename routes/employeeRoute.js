@@ -436,6 +436,28 @@ router.get('/total-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+router.get('/remaining-medical-leaves', async (req, res) => {
+    try {
+        // Fetch medical leave data for all employees
+        const employees = await Employee.find({});
+
+        // Calculate remaining medical leaves for each employee
+        const medicalLeavesData = employees.map(employee => {
+            // Deduct leaves taken by each employee from the default medical_leave value
+            const remainingMedicalLeave = 4 - employee.medical_leave;
+            return {
+                employeeId: employee._id,
+                remainingMedicalLeave: remainingMedicalLeave >= 0 ? remainingMedicalLeave : 0 // Ensure remaining leaves are non-negative
+            };
+        });
+
+        // Return remaining medical leaves data
+        res.json({ medicalLeavesData });
+    } catch (error) {
+        console.error('Error fetching remaining medical leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 
