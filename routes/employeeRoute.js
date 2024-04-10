@@ -312,7 +312,7 @@ router.delete('/deleteleave/:id', async (req, res) => {
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
-        const file = req.file.filename
+        const file = req.file
         // Create a new announcement with the request body and file information
         const announcement = new Announcement({
             ...req.body, file 

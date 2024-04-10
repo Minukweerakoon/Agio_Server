@@ -13,27 +13,27 @@ const multer = require('multer');
   
   
   // Adjust your POST route to handle file upload
-  router.post('/AnnHRsup', upload.single('file'), async (req, res) => {
-    try {
-        // const fileData = req.file ? {
-        //     filePath: req.file.path,
-        //     originalName: req.file.originalname
-        // } : {};
-        const file = req.file.filename; 
+//   router.post('/AnnHRsup', upload.single('file'), async (req, res) => {
+//     try {
+//         // const fileData = req.file ? {
+//         //     filePath: req.file.path,
+//         //     originalName: req.file.originalname
+//         // } : {};
+//         const file = req.file.filename; 
         
-        // Create a new announcement with the request body and file information
-        const announcement = new Announcement({
-            ...req.body,
-            file: fileData ? [fileData] : [],file// Assuming you might have multiple files in the future
-        });
+//         // Create a new announcement with the request body and file information
+//         const announcement = new Announcement({
+//             ...req.body,
+//             file: fileData ? [fileData] : [],file// Assuming you might have multiple files in the future
+//         });
 
-        await announcement.save();
-        res.status(200).send({ message: "Announcement uploaded Successfully", success: true, announcement });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
-    }
-});
+//         await announcement.save();
+//         res.status(200).send({ message: "Announcement uploaded Successfully", success: true, announcement });
+//     } catch (error) {
+//         console.log(error)
+//         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+//     }
+// });
 
 
 router.get('/getAnnHRsup', async (req, res) => {
