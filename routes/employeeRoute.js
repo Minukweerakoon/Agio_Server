@@ -26,6 +26,15 @@ router.post("/Main_register", async (req, res) => {
         res.status(500).send({ message: "Error registering employee", success: false, error });
     }
 });
+router.get('/employees', async (req, res) => {
+    try {
+      const employees = await Employee.find();
+      res.json({ success: true, data: employees });
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  });
 
 router.post("/Main_login", async (req, res) => {
     try {
