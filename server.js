@@ -13,6 +13,11 @@ const authMiddleware2 = require("./middleware/authMiddleware2");
 
 const inquiryRoute = require("./routes/inquiryRoute")
 
+const cors = require('cors');
+
+
+app.use(cors())
+
 
 app.use('/api/user', userRoute);
 

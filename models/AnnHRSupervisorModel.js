@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
   // Assuming each announcement can have multiple files
   file: {
     type: Object,
-    required:true,
+    required:false,
 },
 
   Description: {
