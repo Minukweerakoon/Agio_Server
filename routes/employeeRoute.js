@@ -10,6 +10,7 @@ const Announcement = require('../models/AnnHRSupervisorModel');
 const upload = require('../middleware/upload');
 
 
+
 router.post("/Main_register", async (req, res) => {
     try {
         const userExists = await Employee.findOne({ username_log: req.body.username_log });
@@ -312,7 +313,7 @@ router.delete('/deleteleave/:id', async (req, res) => {
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
-        const file = req.file.filename
+        const file = req.file
         // Create a new announcement with the request body and file information
         const announcement = new Announcement({
             ...req.body, file 
