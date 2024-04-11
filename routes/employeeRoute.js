@@ -7,6 +7,7 @@ const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const Announcement = require('../models/AnnHRSupervisorModel');
+const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
 
 
