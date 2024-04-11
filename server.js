@@ -30,7 +30,7 @@ app.use('/api/inquiry/', inquiryRoute);
 app.use('/api/insurance', insuranceRoute)
 
 
-
+app.use('/uploads', express.static('uploads'));
 const workoutRoutes= require('./routes/annWorkouts');//from routes
 
 
