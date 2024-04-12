@@ -74,7 +74,8 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 unseenNotifications,
                 username: employee.username_log,
                 fullname:employee.fname,
-                password : employee.password_log
+                password : employee.password_log,
+                _id: employee._id
                 // Include other necessary fields here
             } });
         }
