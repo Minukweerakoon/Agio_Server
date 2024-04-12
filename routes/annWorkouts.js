@@ -4,21 +4,37 @@ const Announcement = require('../models/AnnHRSupervisorModel');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware");
+const upload = require('../middleware/upload');
 
 
+const multer = require('multer');
 
-// POST a new announcement
-router.post('/AnnHRsup', async (req, res) => {
-    try {
+  
+  
+  
+//   Adjust your POST route to handle file upload
+//   router.post('/AnnHRsup', upload.single('file'), async (req, res) => {
+//     try {
+//         // const fileData = req.file ? {
+//         //     filePath: req.file.path,
+//         //     originalName: req.file.originalname
+//         // } : {};
+//         const file = req.file.filename; 
         
-        const announcement = new Announcement (req.body);
-        await announcement.save();
-        res.status(200).send({ message: "Announcement uploaded Successfully", success: true });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
-    }
-});
+//         // Create a new announcement with the request body and file information
+//         const announcement = new Announcement({
+//             ...req.body,
+//             file: fileData ? [fileData] : [],file// Assuming you might have multiple files in the future
+//         });
+
+//         await announcement.save();
+//         res.status(200).send({ message: "Announcement uploaded Successfully", success: true, announcement });
+//     } catch (error) {
+//         console.log(error)
+//         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+//     }
+// });
+
 
 router.get('/getAnnHRsup', async (req, res) => {
     try {
@@ -48,7 +64,7 @@ router.get('/getAnnHRsup2/:id', async (req, res) => {
     }
 });
 // Update an announcement
-router.put('/updateAnnHRsup/:id', async (req, res) => {
+router.put('/updateAnnHRsup/:id', upload.single('file'), async (req, res) => {
     try {
         const { id } = req.params;
         const updatedAnnouncement = await Announcement.findByIdAndUpdate(id, req.body, { new: true });
@@ -75,6 +91,7 @@ router.delete('/deleteAnnHRsup/:id', async (req, res) => {
         res.status(500).send({ message: "Failed to delete announcement.", success: false, error });
     }
 });
+
 
 
 
