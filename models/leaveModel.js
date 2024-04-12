@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
 
 
     },
+    file: {
+        type: Object,
+        required:false,
+    },
     
 
   
