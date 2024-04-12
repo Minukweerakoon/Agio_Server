@@ -31,7 +31,16 @@ app.use((req,res,next)=>{
  app.use('/api/annWorkouts',workoutRoutes)
 
  
+// medical
+const medDoctorRoute = require("./routes/medDoctorRoute");
+// whenever an api request is coming with the keywords /api/medDoctor
+// search for endpoints in medDoctorRoute
+app.use('/api/medDoctor', medDoctorRoute);
 
+const medEmployeeRoute = require("./routes/medEmployeeRoute");
+// whenever an api request is coming with the keywords /api/medEmployee
+// search for endpoints in medEmployeeRoute
+app.use('/api/medEmployee', medEmployeeRoute);
  
  
 app.listen(port, () => console.log(`Nodemon Server started at port ${port}`));
