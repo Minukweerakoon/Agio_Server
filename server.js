@@ -14,12 +14,16 @@ const authMiddleware2 = require("./middleware/authMiddleware2");
 const inquiryRoute = require("./routes/inquiryRoute")
 
 
-const UniformOrderRoute = require("./routes/UniformOrderRoute")
+const UniformOrderRoute = require("./routes/UniformOrderRoute");
+const ShirtInventoryRoutes = require('./routes/ShirtInventoryRoutes');
+const SkirtInventoryRoutes = require("./routes/SkirtInventoryRoutes");
 
 app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/UniformOrder', UniformOrderRoute);
+app.use('/api/ShirtInventory', ShirtInventoryRoutes);
+app.use('/api/SkirtInventory', SkirtInventoryRoutes )
 
 app.use('/api/inquiry/', inquiryRoute);
 
