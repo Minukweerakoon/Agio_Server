@@ -5,6 +5,7 @@ const User = require("../models/userModel");
 const Appointment = require("../models/appointmentModel");
 const AvailableDate = require("../models/dateModel");
 const Parameters = require("../models/parametersModel");
+const Employee = require('../models/employeeModel');
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -320,6 +321,131 @@ router.post(
     }
   }
 );
+
+
+
+
+/* =============== manage Overview page ==================== */
+
+/*
+**
+**
+Read all the available dates for the current month
+**
+**
+*/
+router.post("/medical-overview-read-all-available-dates-specific-month", authMiddleware, async (req, res) => {
+  try {
+      const response = await AvailableDate.find({
+        date: {
+          $gte: req.body.startDate,
+          $lte: req.body.endDate,
+      }
+      });
+
+      if (response) {
+          res.status(200).send({
+              message: "Sucessfully retrieved existing available date records",
+              success: true,
+              fetched: response,
+          });
+          console.log("Existing available dates: ", response.data);
+      } else {
+          res.status(200).send({
+              message: "No existing available date records were found",
+              success: false
+          })
+      }
+      
+  } catch (error) {
+    console.log(`Error occured when retrieving all available date records @medDocotrRoute => `, error)
+      res.status(400).send({
+          message: "Error occured when retrieving all available date records",
+          success: false,
+          error: error,
+      })
+  }
+})
+
+
+/*
+*
+*
+Read existing appointment for given appointment ids
+*
+*
+*/
+router.post("/medical-overview-read-all-appointments-specific", authMiddleware, async (req, res) => {
+  try {
+    const response = await Appointment.find(
+      {
+        _id: { $in: req.body.appointmentIds },
+      }
+    );
+
+    if (response.length > 0) {
+      res.status(200).send({
+        message: `Successfully retrieved ${response.length} existing appointment records for the provided ${req.body.appointmentIds.length} Ids`,
+        success: true,
+        fetched: response,
+      })
+    } else {
+      res.status(200).send({
+        message: `No existing appointment records found for the provided ${req.body.appointmentIds.length} Ids`,
+        success: false,
+      })
+    }
+
+
+  } catch (error) {
+    console.log(`Error occured when retrieving appointment records for the ids @medDoctorRoute => `, req.body.appointmentIds, error)
+    res.status(400).send({
+      message: `Error occured when retrieving appointment records for the ids ${req.body.appointmentIds}`,
+      success: false,
+      error: error,
+    });
+  }
+});
+
+
+/*
+*
+*
+Retrieve employee info for given ids
+*
+*
+*/
+router.post("/medical-overview-read-all-employees-specific", authMiddleware, async (req, res) => {
+  try {
+    const response = await Employee.find(
+      {
+        _id: { $in: req.body.employeeIds },
+      }
+    )
+
+    if (response.length > 0) {
+      res.status(200).send({
+        message: `Successfully retrieved ${response.length} employee records for the provided ${req.body.employeeIds.length} Ids`,
+        success: true,
+        fetched: response,
+      })
+    } else {
+      res.status(200).send({
+        message: `No existing employee records found for the provided ${req.body.employeeIds.length} Ids`,
+        success: false,
+      })
+    }
+
+  } catch (error) {
+    console.log(`Error occured when retrieving employee records for the ids @medDoctorRoute => `, req.body.employeeIds, error)
+    res.status(400).send({
+      message: `Error occured when retrieving employee records for the ids ${req.body.employeeIds}`,
+      success: false,
+      error: error,
+    });
+  }
+});
+
 
 // export the router
 module.exports = router;
