@@ -465,8 +465,13 @@ router.put('/updateAnnHRsup/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Announcement not found." });
         }
         res.json({ success: true, message: "Announcement updated successfully.", announcement: updatedAnnouncement });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
 
-=======
+
 router.get('/total-medical-leaves', async (req, res) => {
     try {
         // Fetch medical leave data for all employees
@@ -594,7 +599,3 @@ router.delete('/deleteAnnHRsup/:id', async (req, res) => {
 
 
 module.exports = router;
-
-
-
-    
