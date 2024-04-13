@@ -11,8 +11,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    RangePicker: {
-        type: [Array],
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
         required: true
     },
     Type: {
@@ -31,6 +35,10 @@ const userSchema = new mongoose.Schema({
         default:"pending",
 
 
+    },
+    file: {
+        type: Object,
+        required:false,
     },
     
 
