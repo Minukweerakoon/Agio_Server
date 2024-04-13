@@ -11,8 +11,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    RangePicker: {
-        type: [Array],
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
         required: true
     },
     Type: {
