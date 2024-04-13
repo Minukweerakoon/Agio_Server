@@ -97,41 +97,41 @@ router.post("/medical-available-date-update", authMiddleware, async (req, res) =
 );
 
 /*
-  **
-  **
-  Read specific available date
-  **
-  **
-  */
-  router.post("/medical-available-date-read-one-specific", authMiddleware, async (req, res) => {
-      try {
-        const response = await AvailableDate.findOne({
-          date: req.body.date,
+**
+**
+Read specific available date
+**
+**
+*/
+router.post("/medical-available-date-read-one-specific", authMiddleware, async (req, res) => {
+    try {
+      const response = await AvailableDate.findOne({
+        date: req.body.date,
+      });
+
+      if (response) {
+        res.status(200).send({
+          message: `Retrieved the record for the date: ${req.body.date}`,
+          success: true,
+          fetched: response,
         });
-  
-        if (response) {
-          res.status(200).send({
-            message: `Retrieved the record for the date: ${req.body.date}`,
-            success: true,
-            fetched: response,
-          });
-        } else {
-          res.status(200).send({
-            message: `No record was found for the date: ${req.body.date}`,
-            success: false,
-          });
-        }
-      } catch (error) {
-          console.log(`Error occured when retrieving the date record for the date: ${req.body.date} @medEmployeeRoute => `, error)
-          res.status(400).send({
-            message: `Error occured when retrieving the date record for the date: ${req.body.date}`,
-            success: false,
-            error: error,
-          })
+      } else {
+        res.status(200).send({
+          message: `No record was found for the date: ${req.body.date}`,
+          success: false,
+        });
       }
+    } catch (error) {
+        console.log(`Error occured when retrieving the date record for the date: ${req.body.date} @medEmployeeRoute => `, error)
+        res.status(400).send({
+          message: `Error occured when retrieving the date record for the date: ${req.body.date}`,
+          success: false,
+          error: error,
+        })
     }
-  );
-  
+  }
+);
+
 
 
 
@@ -147,7 +147,10 @@ Read existing appointment for a specific user
 router.post("/medical-appointment-read-one-specific", authMiddleware, async (req, res) => {
   try {
     const response = await Appointment.findOne(
-      {userId: req.body.id}
+      {
+        userId: req.body.id,
+        status: "pending", 
+      }
     )
 
     if (response) {
@@ -311,18 +314,21 @@ Read all appointments for a specific user
 router.post("/medical-appointment-read-all-specific", authMiddleware, async (req, res) => {
   try {
     const response = await Appointment.find(
-      {userId: req.body.id}
+      {
+        userId: req.body.id,
+        status: { $ne: "pending" }
+      }
     )
 
     if (response) {
       res.status(200).send({
-          message: `Sucessfully retrieved existing available all the appointments for the user: ${req.body.id}`,
+          message: `Sucessfully retrieved all existing appointments for the user: ${req.body.id}`,
           success: true,
           fetched: response,
       });
   } else {
       res.status(200).send({
-          message: `Retrieving all the appointments for the user: ${req.body.id} failed`,
+          message: `No existing appointments were found for the user: ${req.body.id}`,
           success: false
       })
   }
