@@ -429,11 +429,23 @@ router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
-
-
-
-
 router.get('/getAnnHRsup', async (req, res) => {
+    try {
+        const announcements = await Announcement.find();
+        if (!announcements || announcements.length === 0) {
+            return res.status(404).send({ message: "No announcements found.", success: false });
+        }
+        res.status(200).send({ announcements, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
+    }
+});
+
+
+
+
+router.get('/getAnnHRsupgen', async (req, res) => {
     try {
         const announcements = await Announcement.find({ Type: 'General' });
         if (!announcements || announcements.length === 0) {
