@@ -471,6 +471,25 @@ router.put('/updateAnnHRsup/:id', async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error." });
     }
 });
+const employees = [
+    {  department: 'Logistics' },
+    {  department: 'Procurement Department' },
+    {  department: 'Quality Assurance' },
+    {  department: 'Production Department' },
+    {  department: 'Sales and Marketing' },
+    {  department: 'Finance and Accounting' },
+    // Add more employees
+  ];
+  router.post('/sendAnnouncement', (req, res) => {
+    const { department } = req.body;
+    const targetedEmployees = employees.filter(emp => emp.department === department);
+  
+    // Logic to send the announcement to these employees
+    // For example, you could send an email, a push notification, etc.
+  
+    res.send({ success: true, message: `Announcement sent to ${department} department.` });
+  });
+
 
 
 router.get('/total-medical-leaves', async (req, res) => {
