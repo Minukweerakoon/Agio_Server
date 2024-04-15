@@ -439,7 +439,30 @@ router.get('/getAnnHRsup', async (req, res) => {
         if (!announcements || announcements.length === 0) {
             return res.status(404).send({ message: "No announcements found.", success: false });
         }
-        res.status(200).send({ announcements, success: true });
+
+        // If the announcement type is "Specific"
+        const specificAnnouncements = announcements.filter(announcement => announcement.Type === 'Specific');
+
+        if (specificAnnouncements.length === 0) {
+            return res.status(200).send({ announcements, success: true });
+        }
+
+        // Retrieve departments for specific announcements
+        const departments = specificAnnouncements.map(announcement => announcement.Department);
+
+        // Find employees in the specified departments
+        const employeesInDepartments = await Employee.find({ department: { $in: departments } });
+
+        // Extract employee IDs
+        const employeeIds = employeesInDepartments.map(employee => employee._id);
+
+        // Filter announcements visible to these employees
+        const visibleAnnouncements = announcements.filter(announcement => {
+            // Check if announcement is either not specific or the department matches
+            return announcement.Type !== 'Specific' || departments.includes(announcement.Department);
+        });
+
+        res.status(200).send({ announcements: visibleAnnouncements, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
