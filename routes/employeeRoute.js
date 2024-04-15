@@ -435,34 +435,30 @@ router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res
 
 router.get('/getAnnHRsup', async (req, res) => {
     try {
-        const announcements = await Announcement.find();
+        const announcements = await Announcement.find({ Type: 'General' });
+        if (!announcements || announcements.length === 0) {
+            return res.status(404).send({ message: "No general announcements found.", success: false });
+        }
+        res.status(200).send({ announcements, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve general announcements.", success: false, error });
+    }
+});
+router.get('/getAnnHRsupSpecific', async (req, res) => {
+    try {
+        // Extract user's department from request query
+        const userDepartment = req.query.department;
+        console.log(userDepartment)
+
+        // Fetch announcements based on user's department and type
+        const announcements = await Announcement.find({ Department: userDepartment, Type: 'Specific' });
+        
         if (!announcements || announcements.length === 0) {
             return res.status(404).send({ message: "No announcements found.", success: false });
         }
 
-        // If the announcement type is "Specific"
-        const specificAnnouncements = announcements.filter(announcement => announcement.Type === 'Specific');
-
-        if (specificAnnouncements.length === 0) {
-            return res.status(200).send({ announcements, success: true });
-        }
-
-        // Retrieve departments for specific announcements
-        const departments = specificAnnouncements.map(announcement => announcement.Department);
-
-        // Find employees in the specified departments
-        const employeesInDepartments = await Employee.find({ department: { $in: departments } });
-
-        // Extract employee IDs
-        const employeeIds = employeesInDepartments.map(employee => employee._id);
-
-        // Filter announcements visible to these employees
-        const visibleAnnouncements = announcements.filter(announcement => {
-            // Check if announcement is either not specific or the department matches
-            return announcement.Type !== 'Specific' || departments.includes(announcement.Department);
-        });
-
-        res.status(200).send({ announcements: visibleAnnouncements, success: true });
+        res.status(200).send({ announcements, success: true });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
