@@ -15,6 +15,7 @@ const inquiryRoute = require("./routes/inquiryRoute")
 
 
 app.use('/api/user', userRoute);
+
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
 
@@ -31,6 +32,7 @@ const workoutRoutes= require('./routes/annWorkouts');//from routes
 
 
 const port = process.env.PORT || 5001;
+
 
 //announcement
 

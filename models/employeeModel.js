@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     empid: {
         type: String,
-        
+
         unique: true
         
     },
