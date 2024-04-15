@@ -491,6 +491,33 @@ const employees = [
   });
 
 
+router.get('/announcement/:type', async (req, res) => {
+    try {
+        const type = req.params.type;
+        
+        // Find announcement with specific type
+        const announcement = await Announcement.findOne({ type });
+
+        if (!announcement) {
+            return res.status(404).json({ message: 'Announcement not found' });
+        }
+
+        // Find employees in the department
+        const employees = await Employee.find({ department: announcement.department });
+
+        // Send announcement to employees
+        // This is a basic example, in production, you might send emails or push notifications
+        employees.forEach(employee => {
+            console.log(`Sending announcement "${announcement.title}" to ${employee.name} (${employee.email})`);
+        });
+
+        res.status(200).json({ message: 'Announcement sent to department' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 
 router.get('/total-medical-leaves', async (req, res) => {
     try {
