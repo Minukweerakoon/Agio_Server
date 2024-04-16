@@ -16,6 +16,7 @@ const inquiryRoute = require("./routes/inquiryRoute")
 
 const UniformOrderRoute = require("./routes/UniformOrderRoute");
 const UniformShirtRoute = require('./routes/UniformShirtRoute'); 
+const uniformSkirtRoute = require('./routes/UniformSkirtRoute');
 
 
 app.use('/api/user', userRoute);
@@ -25,6 +26,7 @@ app.use('/api/leave', leaveRoute);
 
 app.use('/api/UniformOrder', UniformOrderRoute);
 app.use('/api/UniformShirt', UniformShirtRoute);
+app.use('/api/UniformSkirt', uniformSkirtRoute);
 
 
 app.use('/api/inquiry/', inquiryRoute);
