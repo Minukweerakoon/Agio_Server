@@ -6,6 +6,7 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const Inquiry = require('../models/inquiryModel');
 
 router.post("/Main_register", async (req, res) => {
     try {
@@ -354,7 +355,131 @@ router.post('/deduct_medical_leave', async (req, res) => {
     }
 });
 
-module.exports = router;
+//INQUIRIESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+
+router.post('/inquiry', async (req, res) => {
+    try {
+        
+        const inquiry = new Inquiry (req.body);
+        await inquiry.save();
+        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
+    }
+});
+
+router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+      const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+  
+  // Update inquiry status
+  router.put('/updateinquiry/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
+        if (!inquiry) {
+            return res.status(404).json({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).json({ message: "Inquiry updated successfully", success: true, inquiry });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update inquiry", success: false, error });
+    }
+});
+
+
+  
+//  deleting an inquiry
+router.delete('/deleteinquiry/:id', async (req, res) => {
+    try {
+        const inquiry = await Inquiry.findByIdAndDelete(req.params.id);
+        if (!inquiry) {
+            return res.status(404).send({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).send({ message: "Inquiry deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete inquiry request.", success: false, error });
+    }
+});
+
+
+//Admins Code
+
+router.get('/all-inquiries', async (req, res) => {
+    try {
+      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+
+  router.post('/api/inquiries/:id/update-status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    // Find the inquiry by id in your database
+    const inquiry = await Inquiry.findById(id);
+
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    // Update the status of the inquiry
+    inquiry.status = status; // Assuming 'status' is a field in your Inquiry model
+    await inquiry.save(); // Save the updated inquiry to the database
+
+    // Return the updated inquiry
+    return res.status(200).json({ message: 'Status updated successfully', inquiry });
+  } catch (error) {
+    console.error('Error updating status:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/api/inquiries/:id/reply', async (req, res) => {
+  const { id } = req.params;
+  const { reply, username } = req.body;
+
+  try {
+    // Find the inquiry by id in your database
+    const inquiry = await Inquiry.findById(id);
+
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+
+    // Save the reply to the inquiry
+    inquiry.reply = reply;
+    inquiry.repliedBy = username; // Assuming you have a field to store who replied
+    await inquiry.save();
+
+    // Return the updated inquiry
+    return res.status(200).json({ message: 'Reply sent successfully', inquiry });
+  } catch (error) {
+    console.error('Error replying to inquiry:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+  
+
+  
+  module.exports = router;
 
 
 
