@@ -709,22 +709,27 @@ router.delete('/deleteAnnHRsup/:id', async (req, res) => {
 });
 router.get('/monthly-medical-leaves', async (req, res) => {
     try {
-        // Aggregate leaves to count medical leaves by month
+        // Extract year from query parameter, default to current year if not provided
+        const year = req.query.year || new Date().getFullYear();
+        
+        // Aggregate leaves to count medical leaves by month and year
         const monthlyMedicalLeaves = await Leave.aggregate([
             {
                 $match: {
                     status: 'approved', // Filter for approved leaves
-                    Type: 'Medical' // Filter for medical leaves
+                    Type: 'Medical', // Filter for medical leaves
+                    startDate: { $gte: new Date(`${year}-01-01`), $lte: new Date(`${year}-12-31`) } // Filter for leaves within the specified year
                 }
             },
             {
                 $project: {
-                    month: { $month: '$startDate' } // Extract month from startDate
+                    month: { $month: '$startDate' }, // Extract month from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
                 }
             },
             {
                 $group: {
-                    _id: '$month', // Group leaves by month
+                    _id: { month: '$month', year: '$year' }, // Group leaves by month and year
                     count: { $sum: 1 } // Count the number of leaves in each group
                 }
             }
@@ -736,14 +741,17 @@ router.get('/monthly-medical-leaves', async (req, res) => {
         // Map the aggregated data to an object with month as key and count as value
         const monthlyMedicalLeavesMap = {};
         monthlyMedicalLeaves.forEach(monthlyLeave => {
-            // Get the month from the MongoDB date aggregation
-            const month = monthlyLeave._id;
+            // Get the month and year from the MongoDB date aggregation
+            const { month, year } = monthlyLeave._id;
             // Get the count of medical leaves for this month
             const count = monthlyLeave.count;
             // Add the month and count to the map
-            monthlyMedicalLeavesMap[month] = count;
-            // Log the month and count
-            console.log('Month:', month, 'Count:', count);
+            if (!monthlyMedicalLeavesMap[year]) {
+                monthlyMedicalLeavesMap[year] = {};
+            }
+            monthlyMedicalLeavesMap[year][month] = count;
+            // Log the month, year, and count
+            console.log('Month:', month, 'Year:', year, 'Count:', count);
         });
 
         // Send the monthly medical leave count as a response
@@ -765,12 +773,13 @@ router.get('/monthly-general-leaves', async (req, res) => {
             },
             {
                 $project: {
-                    month: { $month: '$startDate' } // Extract month from startDate
+                    month: { $month: '$startDate' }, // Extract month from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
                 }
             },
             {
                 $group: {
-                    _id: '$month', // Group leaves by month
+                    _id: { month: '$month', year: '$year' }, // Group leaves by month and year
                     count: { $sum: 1 } // Count the number of leaves in each group
                 }
             }
@@ -782,14 +791,14 @@ router.get('/monthly-general-leaves', async (req, res) => {
         // Map the aggregated data to an object with month as key and count as value
         const monthlyGeneralLeaves = {};
         monthlyGeneralLeavesData.forEach(data => {
-            // Get the month from the MongoDB date aggregation
-            const month = data._id;
-            // Get the count of general leaves for this month
+            const { month, year } = data._id;
             const count = data.count;
-            // Add the month and count to the map
-            monthlyGeneralLeaves[month] = count;
-            // Log the month and count
-            console.log('Month:', month, 'Count:', count);
+            if (!monthlyGeneralLeaves[year]) {
+                monthlyGeneralLeaves[year] = {};
+            }
+            monthlyGeneralLeaves[year][month] = count;
+            // Log the month, year, and count
+            console.log('Month:', month, 'Year:', year, 'Count:', count);
         });
 
         // Send the monthly general leave count as a response
@@ -812,12 +821,13 @@ router.get('/monthly-annual-leaves', async (req, res) => {
             },
             {
                 $project: {
-                    month: { $month: '$startDate' } // Extract month from startDate
+                    month: { $month: '$startDate' }, // Extract month from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
                 }
             },
             {
                 $group: {
-                    _id: '$month', // Group leaves by month
+                    _id: { month: '$month', year: '$year' }, // Group leaves by month and year
                     count: { $sum: 1 } // Count the number of leaves in each group
                 }
             }
@@ -829,14 +839,14 @@ router.get('/monthly-annual-leaves', async (req, res) => {
         // Map the aggregated data to an object with month as key and count as value
         const monthlyAnnualLeaves = {};
         monthlyAnnualLeavesData.forEach(data => {
-            // Get the month from the MongoDB date aggregation
-            const month = data._id;
-            // Get the count of annual leaves for this month
+            const { month, year } = data._id;
             const count = data.count;
-            // Add the month and count to the map
-            monthlyAnnualLeaves[month] = count;
-            // Log the month and count
-            console.log('Month:', month, 'Count:', count);
+            if (!monthlyAnnualLeaves[year]) {
+                monthlyAnnualLeaves[year] = {};
+            }
+            monthlyAnnualLeaves[year][month] = count;
+            // Log the month, year, and count
+            console.log('Month:', month, 'Year:', year, 'Count:', count);
         });
 
         // Send the monthly annual leave count as a response
@@ -846,9 +856,10 @@ router.get('/monthly-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 router.get('/quarterly-medical-leaves', async (req, res) => {
     try {
-        // Aggregate leaves to count medical leaves by quarter
+        // Aggregate leaves to count medical leaves by quarter and year
         const quarterlyMedicalLeaves = await Leave.aggregate([
             {
                 $match: {
@@ -858,12 +869,13 @@ router.get('/quarterly-medical-leaves', async (req, res) => {
             },
             {
                 $project: {
-                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } } // Extract quarter from startDate
+                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } }, // Extract quarter from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
                 }
             },
             {
                 $group: {
-                    _id: '$quarter', // Group leaves by quarter
+                    _id: { year: '$year', quarter: '$quarter' }, // Group leaves by year and quarter
                     count: { $sum: 1 } // Count the number of leaves in each group
                 }
             }
@@ -872,17 +884,21 @@ router.get('/quarterly-medical-leaves', async (req, res) => {
         // Log the fetched data
         console.log('Quarterly Medical Leaves:', quarterlyMedicalLeaves);
 
-        // Map the aggregated data to an object with quarter as key and count as value
+        // Map the aggregated data to an object with year and quarter as keys and count as value
         const quarterlyMedicalLeavesMap = {};
         quarterlyMedicalLeaves.forEach(quarterlyLeave => {
-            // Get the quarter from the MongoDB date aggregation
-            const quarter = quarterlyLeave._id;
-            // Get the count of medical leaves for this quarter
+            // Get the year and quarter from the MongoDB date aggregation
+            const { year, quarter } = quarterlyLeave._id;
+            // Get the count of medical leaves for this quarter and year
             const count = quarterlyLeave.count;
-            // Add the quarter and count to the map
-            quarterlyMedicalLeavesMap[quarter] = count;
-            // Log the quarter and count
-            console.log('Quarter:', quarter, 'Count:', count);
+            // Initialize the object for the year if it doesn't exist
+            if (!quarterlyMedicalLeavesMap[year]) {
+                quarterlyMedicalLeavesMap[year] = {};
+            }
+            // Add the count for this quarter to the map
+            quarterlyMedicalLeavesMap[year][quarter] = count;
+            // Log the year, quarter, and count
+            console.log('Year:', year, 'Quarter:', quarter, 'Count:', count);
         });
 
         // Send the quarterly medical leave count as a response
@@ -892,9 +908,10 @@ router.get('/quarterly-medical-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 router.get('/quarterly-general-leaves', async (req, res) => {
     try {
-        // Aggregate leaves to count general leaves by quarter
+        // Aggregate leaves to count general leaves by quarter and year
         const quarterlyGeneralLeavesData = await Leave.aggregate([
             {
                 $match: {
@@ -904,12 +921,13 @@ router.get('/quarterly-general-leaves', async (req, res) => {
             },
             {
                 $project: {
-                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } } // Extract quarter from startDate
+                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } }, // Extract quarter from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
                 }
             },
             {
                 $group: {
-                    _id: '$quarter', // Group leaves by quarter
+                    _id: { year: '$year', quarter: '$quarter' }, // Group leaves by year and quarter
                     count: { $sum: 1 } // Count the number of leaves in each group
                 }
             }
@@ -918,17 +936,16 @@ router.get('/quarterly-general-leaves', async (req, res) => {
         // Log the fetched data
         console.log('Quarterly General Leaves:', quarterlyGeneralLeavesData);
 
-        // Map the aggregated data to an object with quarter as key and count as value
+        // Map the aggregated data to an object with year and quarter as keys and count as value
         const quarterlyGeneralLeaves = {};
         quarterlyGeneralLeavesData.forEach(data => {
-            // Get the quarter from the MongoDB date aggregation
-            const quarter = data._id;
-            // Get the count of general leaves for this quarter
+            const { year, quarter } = data._id;
             const count = data.count;
-            // Add the quarter and count to the map
-            quarterlyGeneralLeaves[quarter] = count;
-            // Log the quarter and count
-            console.log('Quarter:', quarter, 'Count:', count);
+            if (!quarterlyGeneralLeaves[year]) {
+                quarterlyGeneralLeaves[year] = {};
+            }
+            quarterlyGeneralLeaves[year][quarter] = count;
+            console.log('Year:', year, 'Quarter:', quarter, 'Count:', count);
         });
 
         // Send the quarterly general leave count as a response
@@ -938,52 +955,7 @@ router.get('/quarterly-general-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-router.get('/quarterly-annual-leaves', async (req, res) => {
-    try {
-        // Aggregate leaves to count annual leaves by quarter
-        const quarterlyAnnualLeavesData = await Leave.aggregate([
-            {
-                $match: {
-                    status: 'approved', // Filter for approved leaves
-                    Type: 'Annual' // Filter for annual leaves
-                }
-            },
-            {
-                $project: {
-                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } } // Extract quarter from startDate
-                }
-            },
-            {
-                $group: {
-                    _id: '$quarter', // Group leaves by quarter
-                    count: { $sum: 1 } // Count the number of leaves in each group
-                }
-            }
-        ]);
 
-        // Log the fetched data
-        console.log('Quarterly Annual Leaves:', quarterlyAnnualLeavesData);
-
-        // Map the aggregated data to an object with quarter as key and count as value
-        const quarterlyAnnualLeaves = {};
-        quarterlyAnnualLeavesData.forEach(data => {
-            // Get the quarter from the MongoDB date aggregation
-            const quarter = data._id;
-            // Get the count of annual leaves for this quarter
-            const count = data.count;
-            // Add the quarter and count to the map
-            quarterlyAnnualLeaves[quarter] = count;
-            // Log the quarter and count
-            console.log('Quarter:', quarter, 'Count:', count);
-        });
-
-        // Send the quarterly annual leave count as a response
-        res.json({ quarterlyAnnualLeaves });
-    } catch (error) {
-        console.error('Error fetching quarterly annual leaves:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 router.get('/yearly-medical-leaves', async (req, res) => {
     try {
         // Aggregate leaves to count medical leaves by year
@@ -1030,6 +1002,53 @@ router.get('/yearly-medical-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+router.get('/quarterly-annual-leaves', async (req, res) => {
+    try {
+        // Aggregate leaves to count annual leaves by quarter and year
+        const quarterlyAnnualLeavesData = await Leave.aggregate([
+            {
+                $match: {
+                    status: 'approved', // Filter for approved leaves
+                    Type: 'Annual' // Filter for annual leaves
+                }
+            },
+            {
+                $project: {
+                    quarter: { $ceil: { $divide: [{ $month: '$startDate' }, 3] } }, // Extract quarter from startDate
+                    year: { $year: '$startDate' } // Extract year from startDate
+                }
+            },
+            {
+                $group: {
+                    _id: { year: '$year', quarter: '$quarter' }, // Group leaves by year and quarter
+                    count: { $sum: 1 } // Count the number of leaves in each group
+                }
+            }
+        ]);
+
+        // Log the fetched data
+        console.log('Quarterly Annual Leaves:', quarterlyAnnualLeavesData);
+
+        // Map the aggregated data to an object with year and quarter as keys and count as value
+        const quarterlyAnnualLeaves = {};
+        quarterlyAnnualLeavesData.forEach(data => {
+            const { year, quarter } = data._id;
+            const count = data.count;
+            if (!quarterlyAnnualLeaves[year]) {
+                quarterlyAnnualLeaves[year] = {};
+            }
+            quarterlyAnnualLeaves[year][quarter] = count;
+            console.log('Year:', year, 'Quarter:', quarter, 'Count:', count);
+        });
+
+        // Send the quarterly annual leave count as a response
+        res.json({ quarterlyAnnualLeaves });
+    } catch (error) {
+        console.error('Error fetching quarterly annual leaves:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.get('/yearly-general-leaves', async (req, res) => {
     try {
         // Aggregate leaves to count general leaves by year
