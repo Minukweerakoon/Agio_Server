@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  comment: {
+    type: String,
+    required: false
+}
   
 });
 

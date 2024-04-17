@@ -550,6 +550,42 @@ router.get('/announcement/:type', async (req, res) => {
 });
 
 
+
+
+router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
+    const { announcementId } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+        return res.status(400).json({ success: false, message: 'Comment text is required' });
+    }
+
+    try {
+        // Find the announcement by ID
+        const announcement = await Announcement.findById(announcementId);
+
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+
+        // Add the comment to the announcement's comments array
+        announcement.comments.push({
+            text,
+            author: req.user.username, // Assuming you have authentication middleware that provides the user
+            createdAt: new Date(),
+        });
+
+        // Save the updated announcement
+        await announcement.save();
+
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+
 router.get('/total-medical-leaves', async (req, res) => {
     try {
         // Fetch medical leave data for all employees
