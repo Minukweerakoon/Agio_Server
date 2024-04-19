@@ -254,10 +254,10 @@ router.post("/medical-appointment-update-one-specific", authMiddleware, async (r
     }
     
   } catch (error) {
-    console.log(`Error occured when scheduling the appointment for user: ${req.body.id} @medEmployeeRoute => `, error);
+    console.log(`Error occured when updating the appointment for user: ${req.body.id} @medEmployeeRoute => `, error);
 
       res.status(400).send({
-        message: `Error occured when scheduling the appointment for user: ${req.body.id}`,
+        message: `Error occured when updating the appointment for user: ${req.body.id}`,
         success: false,
         error: error,
       });
