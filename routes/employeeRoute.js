@@ -9,6 +9,7 @@ const Leave = require('../models/leaveModel');
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
+const Notice = require('../models/AnnCalFormModel')
 
 
 
@@ -569,21 +570,34 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
         }
 
         // Add the comment to the announcement's comments array
-        announcement.comments.push({
+        announcement.comment.push({
             text,
-            author: req.user.username, // Assuming you have authentication middleware that provides the user
+             // Assuming you have authentication middleware that provides the user
             createdAt: new Date(),
         });
 
         // Save the updated announcement
         await announcement.save();
+        
 
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comment[announcement.comment.length - 1] });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+router.post('/AnnCalNotice', async (req, res) => {
+    try {
+        
+        const Notices = new Notice (req.body);
+        await Notices.save();
+        res.status(200).send({ message: "Booking uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
+
 
 
 router.get('/total-medical-leaves', async (req, res) => {
