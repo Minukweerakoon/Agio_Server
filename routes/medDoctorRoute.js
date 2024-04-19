@@ -325,7 +325,7 @@ router.post(
 
 
 
-/* =============== manage Overview page ==================== */
+/* =============== Overview page ==================== */
 
 /*
 **
@@ -445,6 +445,140 @@ router.post("/medical-overview-read-all-employees-specific", authMiddleware, asy
     });
   }
 });
+
+
+/*
+*
+*
+Update the selectd appointment status
+*
+*
+*/
+router.post("/medical-overview-update-one-appointment-status", authMiddleware, async (req, res) => {
+  try {
+    const response = await Appointment.findByIdAndUpdate(
+      req.body.recordId,
+      {
+        $set: {
+          status: req.body.status,
+          updatedAt: req.body.updatedAt,
+        },
+      },
+      { new: true }
+    );
+
+    if (response) {
+      res.status(200).send({
+        message: `Successfully updated the appointment: ${req.body.recordId}`,
+        success: true,
+      });
+    } else {
+      res.status(200).send({
+        message: `Failed to update the appointment: ${req.body.recordId}`,
+        success: false,
+      });
+    }
+    
+  } catch (error) {
+    console.log(`Error occured when updating the appointment: ${req.body.recordId} @medDoctorRoute => `, error);
+
+      res.status(400).send({
+        message: `Error occured when updating the appointment: ${req.body.recordId}`,
+        success: false,
+        error: error,
+      });
+  }
+})
+
+
+
+
+/* =============== Reports page ==================== */
+
+/*
+**
+**
+Read all the available dates for the given period
+**
+**
+*/
+router.post("/medical-reports-read-all-available-dates-specific-period", authMiddleware, async (req, res) => {
+  try {
+      const response = await AvailableDate.find({
+        date: {
+          $gte: req.body.startDate,
+          $lte: req.body.endDate,
+      }
+      });
+
+      if (response) {
+          res.status(200).send({
+              message: `Sucessfully retrieved available date records for the given period`,
+              success: true,
+              fetched: response,
+          });
+          console.log("Existing available dates: ", response);
+      } else {
+          res.status(200).send({
+              message: "No existing available date records were found for the given period",
+              success: false
+          })
+      }
+      
+  } catch (error) {
+    console.log(`Error occured when retrieving available date records for the given period @medDocotrRoute => `, error)
+      res.status(400).send({
+          message: "Error occured when retrieving available date records for the given period",
+          success: false,
+          error: error,
+      })
+  }
+})
+
+
+/*
+**
+**
+Read all the appointment records for the given period
+**
+**
+*/
+router.post("/medical-reports-read-all-appointments-specific-period", authMiddleware, async (req, res) => {
+  try {
+      const response = await Appointment.find({
+        appointmentDate: {
+          $gte: req.body.startDate,
+          $lte: req.body.endDate,
+      }
+      });
+
+      if (response) {
+          res.status(200).send({
+              message: `Sucessfully retrieved appointment records for the given period`,
+              success: true,
+              fetched: response,
+          });
+          console.log("Existing available dates: ", response);
+      } else {
+          res.status(200).send({
+              message: "No existing appointment records were found for the given period",
+              success: false
+          })
+      }
+      
+  } catch (error) {
+    console.log(`Error occured when retrieving appointment records for the given period @medDocotrRoute => `, error)
+      res.status(400).send({
+          message: "Error occured when retrieving appointment records for the given period",
+          success: false,
+          error: error,
+      })
+  }
+})
+
+
+
+
 
 
 // export the router
