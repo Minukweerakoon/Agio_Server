@@ -175,6 +175,7 @@ router.get('/getleave2/:userid', async (req, res) => {
         }
 
         const leave = await Leave.find({ userid });
+       
 
         if (!leave || leave.length === 0) {
             return res.status(404).json({ message: "No leave requests found for this user.", success: false });
@@ -184,6 +185,47 @@ router.get('/getleave2/:userid', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to retrieve leave information.", success: false, error });
+    }
+});
+router.get('/getuserfromleave/:userid', async (req, res) => {
+    try {
+        const { userid } = req.params;
+        
+        // Find the user in the Employee collection based on the provided userid
+        const user = await Employee.findOne({ _id: userid });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found.", success: false });
+        }
+
+        // If the user is found, return the user's information
+        res.status(200).json({ employee: user, success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to retrieve user information.", success: false, error });
+    }
+});
+router.get('/getleavedep', async (req, res) => {
+    try {
+        const department = req.query.department;
+        console.log(department) // Get department from query parameter
+        
+        // Find employees with the specified department
+        const employees = await Employee.find({ department }, '_id');
+        console.log(employees); // Log the found employees
+        
+        // Extract IDs from the found employees
+        const employeeIds = employees.map(employee => employee._id);
+        console.log(employeeIds); // Log the extracted employee IDs
+        
+        // Fetch leave data for the found employee IDs
+        const leaveData = await Leave.find({ userid: { $in: employeeIds } }); 
+        console.log(leaveData) // Log the fetched leave data
+        
+        res.json({ leave: leaveData });
+    } catch (error) {
+        console.error('Error fetching leave data:', error);
+        res.status(500).json({ error: 'Failed to fetch leave data' });
     }
 });
 
