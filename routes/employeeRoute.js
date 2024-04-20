@@ -9,6 +9,7 @@ const Leave = require('../models/leaveModel');
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
+const Notice = require('../models/AnnCalFormModel')
 
 
 
@@ -588,6 +589,7 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
+
     }
 });
 
@@ -624,8 +626,70 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
+
     }
 });
+
+
+
+
+router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
+    const { announcementId } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+        return res.status(400).json({ success: false, message: 'Comment text is required' });
+    }
+
+    try {
+        // Find the announcement by ID
+        const announcement = await Announcement.findById(announcementId);
+
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+
+        // Add the comment to the announcement's comments array
+        announcement.comment.push({
+            text,
+             // Assuming you have authentication middleware that provides the user
+            createdAt: new Date(),
+        });
+
+        // Save the updated announcement
+        await announcement.save();
+        
+
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comment[announcement.comment.length - 1] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+router.post('/AnnCalNotice', async (req, res) => {
+    try {
+        
+        const Notices = new Notice (req.body);
+        await Notices.save();
+        res.status(200).send({ message: "Booking uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
+    }
+});
+router.get('/event', async (req, res) => {
+    try {
+        const getNotice = await Notice.find({});
+        if (!getNotice || getNotice.length === 0) {
+            return res.status(404).send({ message: "No  getNotice found.", success: false });
+        }
+        res.status(200).send({ getNotice, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
+    }
+});
+
 
 
 router.get('/total-medical-leaves', async (req, res) => {
