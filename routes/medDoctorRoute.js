@@ -141,7 +141,11 @@ Read existing available dates
 */
 router.post("/medical-available-dates-read-existing", authMiddleware, async (req, res) => {
     try {
-        const existingDatesResponse = await AvailableDate.find();
+        const existingDatesResponse = await AvailableDate.find(
+          {
+            status: "available",
+          }
+        );
 
         if (existingDatesResponse) {
             res.status(200).send({
