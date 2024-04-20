@@ -28,6 +28,11 @@ const UniformTotalsRoute = require("./routes/UniformTotalsRoute");
 const uniformOrderRoute = require('./routes/UniformOrderRoute');
 const UniformOrder = require('./models/UniformOrderModel');
 
+
+//performance
+const excelupload = require("./routes/Per_excel.js");
+
+
 app.use('/api/user', userRoute);
 
 app.use('/api/employee', employeeRoute);
@@ -52,7 +57,8 @@ app.use('/uploads', express.static('uploads'));
 
 app.use('/api/TransportRoute',TransportRoute)
 
-
+//performance
+app.use("/exceldata",excelupload);
 
 
 const workoutRoutes= require('./routes/annWorkouts');//from routes
