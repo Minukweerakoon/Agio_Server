@@ -2,12 +2,21 @@ const mongoose = require('mongoose');
 
 
 const userSchema = new mongoose.Schema({
+    userid:{
+        type: String,
+        required: true,
+
+    },
     name: {
         type: String,
         required: true
     },
-    RangePicker: {
-        type: [Array],
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
         required: true
     },
     Type: {
@@ -15,16 +24,25 @@ const userSchema = new mongoose.Schema({
         required: true,
         
     },
-    department: {
-        type: String,
-        required: true,
-        
-    },
+    
     
     Description: {
         type: String,
         required: true
     },
+    status:{
+        type:String,
+        default:"pending",
+
+
+    },
+    file: {
+        type: Object,
+        required:false,
+    },
+    
+
+  
    
 }, {
     timestamps: true
