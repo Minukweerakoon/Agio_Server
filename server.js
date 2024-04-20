@@ -41,6 +41,38 @@ const medEmployeeRoute = require("./routes/medEmployeeRoute");
 // whenever an api request is coming with the keywords /api/medEmployee
 // search for endpoints in medEmployeeRoute
 app.use('/api/medEmployee', medEmployeeRoute);
+
+// Run the medEmailScheduler
+const medEmailScheduler = require("./schedulers/medEmailScheduler");
+
+
+// Client connection to listen for request
+
+
+/*app.get("/", (req, res) => {
+    console.log("Client connected");
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  
+    const intervalId = setInterval(() => {
+        const date = new Date().toString();
+        res.write(`data: ${date}\n\n`)
+    }, 1000)
+  
+
+  
+    res.on("close", () => {
+      console.log("Client closed connection");
+      //clearInterval(intervalId);
+      res.end();
+    })
+  });*/
+  
+
+
+
+
+
  
  
 app.listen(port, () => console.log(`Nodemon Server started at port ${port}`));
