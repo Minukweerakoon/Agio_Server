@@ -102,7 +102,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 fullname:employee.fname,
                 password : employee.password_log,
 
-                _id: employee._id
+                _id: employee._id,
 
                 userid: employee._id,
                 empid :employee.empid,
