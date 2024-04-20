@@ -42,6 +42,8 @@ const medEmployeeRoute = require("./routes/medEmployeeRoute");
 // search for endpoints in medEmployeeRoute
 app.use('/api/medEmployee', medEmployeeRoute);
 
+
+
 // Run the medEmailScheduler
 const medEmailScheduler = require("./schedulers/medEmailScheduler");
 

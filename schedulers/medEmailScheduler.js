@@ -5,7 +5,8 @@ require("dotenv").config();
 const EventEmitter = require('events');
 const emitter = new EventEmitter();
 
-
+// Run the medMonthlyReport
+const medMonthlyReport = require("../required/medMonthlyReport");
 
 
 // Transporter
@@ -34,7 +35,7 @@ const mailOptions = {
     attachments: [
         {
             filename: 'Report.pdf',
-            path: 'C:\\Users\\Dinura Vimukthi\\Documents\\GitHub\\agio-server\\pdf\\Report.pdf',
+            path: 'C://Users//Dinura Vimukthi//Documents//GitHub//agio-server//pdf//Report.pdf',
             contentType: 'application/pdf'
         },
     ]
@@ -55,11 +56,14 @@ const sendEmail = async (transporter, mailOptions) => {
     }
 }
 
-/*const medMonthlyReportGenerateScheduler = schedule.scheduleJob('* * * * * *', () => {
+const medMonthlyReportGenerateScheduler = schedule.scheduleJob('* * * * *', () => {
     console.log('Med email scheduler ran');
-    // Emit an event when the scheduler runs
-   
+    
+    medMonthlyReport();
+    medMonthlyReportGenerateScheduler.cancel();
 })
+
+/*
 
 emitter.on('medEmailScheduler', () => {
     console.log('got medEmailScheduler event @medEmailScheduler()');
@@ -73,5 +77,7 @@ emitter.on('medEmailScheduler', () => {
  */
 // Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *'
 const medMonthlyReportScheduler = schedule.scheduleJob('30 0 1 * *', () => {
+    
     sendEmail(transporter, mailOptions);
+    
 })
