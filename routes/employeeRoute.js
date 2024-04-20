@@ -6,9 +6,12 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+<<<<<<< HEAD
 const payment = require('../models/TraPymentModel');
+=======
 const Inquiry = require('../models/inquiryModel');
 
+>>>>>>> 5184267398a0581c83c483d21dbfa1c8515e86ed
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
@@ -993,7 +996,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Leave not found." });
         }
 
-        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
+        res.json({ success: true, message: "Booking updated successfully.", bookings: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
