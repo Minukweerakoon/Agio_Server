@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    department: {
+        type: String,
+        
+    },
     dateJoined: {
         type: Date,
         required: true
@@ -112,6 +116,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 10// Default value for the medical_leave field
     },
+   
 }, {
     timestamps: true
 });
