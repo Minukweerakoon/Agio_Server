@@ -31,7 +31,7 @@ const inquirySchema = new mongoose.Schema({
         default: 'Pending'
     },
     reply: {
-        type: String // Assuming the reply is stored as a string
+        type: String 
     }
     
 }, {
