@@ -116,6 +116,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 10// Default value for the medical_leave field
     },
+   
 }, {
     timestamps: true
 });

@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   
     driPnum: {
-    type: String,
+    type: Number,
     required: true,
   },
   
