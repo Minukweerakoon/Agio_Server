@@ -119,3 +119,4 @@ const medEmailScheduler = require("./schedulers/medEmailScheduler");
  
  
 app.listen(port, () => console.log(`Nodemon Server started at port ${port}`));
+

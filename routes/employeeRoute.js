@@ -6,6 +6,7 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const Inquiry = require('../models/inquiryModel');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
@@ -752,6 +753,113 @@ router.put('/updatevent/:id', async (req, res) => {
         res.status(500).send({ message: "Failed to update event.", success: false, error });
     }
 });
+
+
+router.post('/inquiry', async (req, res) => {
+    try {
+        
+        const inquiry = new Inquiry (req.body);
+        await inquiry.save();
+        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
+    }
+});
+
+router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+      const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+  
+  // Update inquiry status
+  router.put('/updateinquiry/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
+        if (!inquiry) {
+            return res.status(404).json({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).json({ message: "Inquiry updated successfully", success: true, inquiry });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update inquiry", success: false, error });
+    }
+});
+
+
+  
+//  deleting an inquiry
+router.delete('/deleteinquiry/:id', async (req, res) => {
+    try {
+        const inquiry = await Inquiry.findByIdAndDelete(req.params.id);
+        if (!inquiry) {
+            return res.status(404).send({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).send({ message: "Inquiry deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete inquiry request.", success: false, error });
+    }
+});
+
+
+//Admins Code
+
+router.get('/all-inquiries', async (req, res) => {
+    try {
+      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+
+  router.put('/:id/update-status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+  
+    try {
+      const inquiry = await Inquiry.findByIdAndUpdate(id, { status }, { new: true });
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  });
+  
+  // Route for replying to an inquiry
+router.put('/inquiry/:id/reply', async (req, res) => {
+    const { id } = req.params;
+    const { reply } = req.body;
+  
+    try {
+      // Find the inquiry by ID and update the reply field
+      const inquiry = await Inquiry.findByIdAndUpdate(
+        id,
+        { reply, status: 'Done' }, // Update reply and set status to 'Done'
+        { new: true }
+      );
+      
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error replying to inquiry:', error);
+      res.status(500).json({ error: 'Failed to send reply' });
+    }
+  });
+  
+  
+  module.exports = router;
 
 
 

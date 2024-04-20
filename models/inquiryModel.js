@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
-
-const userSchema = new mongoose.Schema({
-    name: {
+const inquirySchema = new mongoose.Schema({
+    userid: {
         type: String,
         required: true
     },
@@ -10,26 +9,35 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    name: {
+        type: String,
+        required: true
+    },
     inquirydate: {
         type: Date,
-        required: true,
-        
+        required: true
     },
     phoneNumber: {
         type: String,
-        required: true,
-        
+        required: true
     },
     describe: {
         type: String,
         required: true
     },
-   
+    status: {
+        type: String,
+        enum: ['Pending', 'Done'], 
+        default: 'Pending'
+    },
+    reply: {
+        type: String 
+    }
+    
 }, {
     timestamps: true
 });
 
+const Inquiry = mongoose.model('Inquiry', inquirySchema);
 
-
-const inquiryModel = mongoose.model("Inquiry", userSchema);
-module.exports = inquiryModel;
+module.exports = Inquiry;
