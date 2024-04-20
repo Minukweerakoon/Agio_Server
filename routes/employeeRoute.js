@@ -6,12 +6,9 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
-<<<<<<< HEAD
 const payment = require('../models/TraPymentModel');
-=======
 const Inquiry = require('../models/inquiryModel');
 
->>>>>>> 5184267398a0581c83c483d21dbfa1c8515e86ed
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
