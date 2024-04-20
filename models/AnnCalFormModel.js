@@ -12,8 +12,13 @@ const userSchema = new mongoose.Schema({
         required: true
     
       },
-      date:{
-        type: String,
+      submission:{
+        type: Date,
+        required: true
+    
+      },
+      expiryDate:{
+        type: Date,
         required: true
     
       },

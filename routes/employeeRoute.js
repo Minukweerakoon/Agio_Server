@@ -597,6 +597,18 @@ router.post('/AnnCalNotice', async (req, res) => {
         res.status(500).send({ message: "Booking upload unsuccessful.", success: false, error });
     }
 });
+router.get('/event', async (req, res) => {
+    try {
+        const getNotice = await Notice.find({});
+        if (!getNotice || getNotice.length === 0) {
+            return res.status(404).send({ message: "No  getNotice found.", success: false });
+        }
+        res.status(200).send({ getNotice, success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
+    }
+});
 
 
 
