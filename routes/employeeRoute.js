@@ -695,19 +695,64 @@ router.get('/event', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
     }
 });
-router.delete('/api/event/:id', async (req, res) => {
+router.delete('/deletevent/:id', async (req, res) => {
     try {
-        const event = await Event.findByIdAndRemove(req.params.id);
+        
+        // Assuming EventModel is your model for the events collection
+        const event = await Notice.findByIdAndDelete(req.params.id);
 
         if (!event) {
-            return res.status(404).send('No event found with that ID');
+            return res.status(404).send({ 
+                message: "Event not found.", 
+                success: false 
+            });
         }
 
-        res.send(`Event '${event.title}' was deleted successfully`);
+        res.status(200).send({ 
+            message: "Event deleted successfully", 
+            success: true 
+        });
     } catch (error) {
-        res.status(500).send('Error deleting the event: ' + error);
+        console.error('Failed to delete the event:', error);
+        res.status(500).send({ 
+            message: "Failed to delete event.", 
+            success: false, 
+            error 
+        });
     }
 });
+// PUT endpoint to update an event
+router.put('/updatevent/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, description, submission, expiryDate } = req.body;
+
+    if (!id) {
+        return res.status(400).send({ message: "Event ID is required", success: false });
+    }
+
+    try {
+        const updatedEvent = await Notice.findByIdAndUpdate(id, {
+            title,
+            description,
+            submission,
+            expiryDate
+        }, { new: true });
+
+        if (!updatedEvent) {
+            return res.status(404).send({ message: "Event not found.", success: false });
+        }
+
+        res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+    } catch (error) {
+        console.error('Failed to update the event:', error);
+        res.status(500).send({ message: "Failed to update event.", success: false, error });
+    }
+});
+
+
+
+
+
 
 
 
