@@ -451,6 +451,7 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
+
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -860,6 +861,7 @@ router.put('/inquiry/:id/reply', async (req, res) => {
   
   
   module.exports = router;
+
 
 
 
@@ -1772,6 +1774,7 @@ router.get('/yearly-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 
