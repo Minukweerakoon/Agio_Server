@@ -15,8 +15,11 @@ const uniformOrderSchema = new mongoose.Schema({
     },
     waistSize: {
         type: String,
-        required: function() {
-            return this.position === 'Factory Worker'; // Only required if position is 'Factory Worker'
+        default: function () {
+            return this.position === 'Executive' ? '0' : '';
+        },
+        required: function () {
+            return this.position === 'Factory Worker';
         }
     },
     uniformCount: {
