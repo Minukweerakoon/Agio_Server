@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     empid: {
         type: String,
-        
+
         unique: true
         
     },
@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     shift: {
         type: String,
         required: true
+    },
+    department: {
+        type: String,
+        
     },
     dateJoined: {
         type: Date,

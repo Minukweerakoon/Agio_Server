@@ -14,6 +14,11 @@ const authMiddleware2 = require("./middleware/authMiddleware2");
 
 const inquiryRoute = require("./routes/inquiryRoute")
 
+const cors = require('cors');
+
+
+app.use(cors())
+
 
 const UniformOrderRoute = require("./routes/UniformOrderRoute")
 
@@ -30,7 +35,11 @@ app.use('/api/inquiry/', inquiryRoute);
 app.use('/api/insurance', insuranceRoute)
 
 
+
+app.use('/uploads', express.static('uploads'));
+
 app.use('/api/TransportRoute',TransportRoute)
+
 
 
 
