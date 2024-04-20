@@ -6,11 +6,11 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
-
+const payment = require('../models/TraPymentModel');
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
-
+const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
@@ -700,6 +700,7 @@ router.get('/event', async (req, res) => {
 
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
 
+
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
@@ -1039,6 +1040,25 @@ router.put('/updatevehicles/:id', async (req, res) => {
          res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
      }
  });
+
+
+ router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
+
+// Payment booking slip upload
+router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const file = req.file.filename; 
+
+        const pay = new payment({ file }); 
+        await pay.save();
+        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
+    }
+});
 
 module.exports = router;
 
