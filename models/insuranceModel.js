@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
     },  
     file: {
         type: String,
+        required: true,
+    },
+    status: {
+        type: String,
+        default: "Pending",
     }
     }, 
     {

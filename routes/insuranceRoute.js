@@ -4,10 +4,12 @@ const Insurance = require('../models/insuranceModel');
 const upload = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
+const authMiddleware = require('../middleware/authMiddleware2');
 
 // Serve files from the 'uploads' directory
 router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Post the insurance data
 router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
     try {
         const { name, id, phoneNumber, description } = req.body;
@@ -15,26 +17,25 @@ router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
 
         const newInsurance = new Insurance({ name, id, phoneNumber, description, file }); 
         await newInsurance.save();
-        
-        // Send the ID of the newly created insurance entry in the response
-        res.status(200).send({ message: "Claim submission successful.", success: true, insuranceId: newInsurance._id });
+        res.status(200).send({ message: "Claim submission successful.", success: true, userId: id });
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Claim submission unsuccessful.", success: false, error });
     }
 });
 
-router.get('/getInsuranceEmployee', async (req, res) => {
+// Get the insurance data by id 
+router.get('/getInsuranceEmployee/:userId', async (req, res) => {
     try {
-        const userId = req.query.userId; // Extract userId from query parameter
+        const userId = req.params.userId; 
+        console.log(userId);
 
         if (!userId) {
             return res.status(400).send({ message: "User ID is required.", success: false });
         }
 
-        // Fetch insurance data based on the provided user ID
-        const insuranceData = await Insurance.findOne({ id: userId });
-
+        const insuranceData = await Insurance.find({ id: userId });
+        console.log(insuranceData);
         if (!insuranceData) {
             return res.status(404).send({ message: "No insurance details found for the specified user ID.", success: false });
         }
@@ -46,29 +47,7 @@ router.get('/getInsuranceEmployee', async (req, res) => {
     }
 });
 
-router.put('/updateInsurance/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, phoneNumber, file } = req.body;
-
-        // Assuming Insurance is a Mongoose model
-        const updatedInsurance = await Insurance.findOneAndUpdate(
-            { id }, // Use the user ID directly without attempting to cast it to an ObjectId
-            { name, phoneNumber, file },
-            { new: true } // To return the updated document
-        );
-
-        if (!updatedInsurance) {
-            return res.status(404).json({ success: false, message: "Insurance not found." });
-        }
-
-        res.json({ success: true, message: "Insurance updated successfully.", insurance: updatedInsurance });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error." });
-    }
-});
-
+// Get all the insurance data
 router.get('/getInsurance', async (req, res) => {
     try {
         const insurance = await Insurance.find();
@@ -82,16 +61,7 @@ router.get('/getInsurance', async (req, res) => {
     }
 });
 
-router.get('/get-files', async (req, res) => {
-    try {
-        const files = await Insurance.find({}, 'file'); // Fetch only the 'file' field
-        res.status(200).send({ status: "Ok", data: files });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ status: "Error", message: "Failed to retrieve files" });
-    }
-});
-
+// Get the file
 router.get('/view-file/:fileName', async (req, res) => {
     try {
         const fileName = req.params.fileName;
@@ -101,7 +71,7 @@ router.get('/view-file/:fileName', async (req, res) => {
                 console.error(err);
                 return res.status(500).send({ status: "Error", message: "Failed to read file" });
             }
-            res.setHeader('Content-Type', 'application/pdf'); // Adjust content type as needed
+            res.setHeader('Content-Type', 'application/pdf'); 
             res.send(data);
         });
     } catch (error) {
@@ -110,6 +80,71 @@ router.get('/view-file/:fileName', async (req, res) => {
     }
 });
 
+// Update insurance data
+router.put('/updateInsurance/:id', async (req, res) => {
+    const id = req.params.id;
+    const { name, phoneNumber, description, file} = req.body;
+  
+    try {
+        
+        const updatedinsurance = await Insurance.findByIdAndUpdate(
+            id,
+            { name, phoneNumber, description, file },
+            { new: true}
+        );
+
+        if (!updatedinsurance) {
+            return res.status(404).json({ success: false, message: "Insurance not found." });
+        }
+
+        res.json({ success: true, message: "Insurance Claim Requset updated successfully.", insurance: updatedinsurance});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+  });
+
+  
+// Delete insurance data
+router.delete('/deleteInsurance/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+  
+      const insuranceData = await Insurance.findByIdAndDelete(req.params.id);
+  
+      if (!insuranceData) {
+        return res.status(404).json({ success: false, message: "Insurance data not found." });
+      }
+  
+      res.status(200).send({ message: "Claim Requset deleted successfully", success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Failed to delete claim request.", success: false, error });
+    }
+});
+
+// Update insurance status
+router.put('/changeStatus/:id', async (req, res) => {
+    const id = req.params.id;
+    const { status } = req.body;
+
+    try {
+        const updatedInsurance = await Insurance.findByIdAndUpdate(
+            id,
+            { status }, 
+            { new: true }
+        );
+
+        if (!updatedInsurance) {
+            return res.status(404).json({ success: false, message: "Insurance not found." });
+        }
+
+        res.json({ success: true, message: `Insurance status updated to ${status} successfully.`, insurance: updatedInsurance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
 
 
 module.exports = router;

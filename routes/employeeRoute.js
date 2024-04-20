@@ -329,6 +329,11 @@ router.post('/approveleave/:id', async (req, res) => {
         }
         
         res.json({ success: true, message: "Leave approved successfully.", leave: updatedleave });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
 
 //announcments
 
@@ -443,7 +448,3 @@ router.delete('/deleteAnnHRsup/:id', async (req, res) => {
 
 
 module.exports = router;
-
-
-
-
