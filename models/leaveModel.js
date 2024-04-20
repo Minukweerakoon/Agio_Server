@@ -11,8 +11,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    RangePicker: {
-        type: [Array],
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
         required: true
     },
     Type: {
@@ -20,11 +24,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         
     },
-    department: {
-        type: String,
-        required: true,
-        
-    },
+    
     
     Description: {
         type: String,
@@ -36,18 +36,11 @@ const userSchema = new mongoose.Schema({
 
 
     },
-    medical_leave: {
-        type: Number,
-        default: 4// Default value for the medical_leave field
+    file: {
+        type: Object,
+        required:false,
     },
-    general_leave: {
-        type: Number,
-        default: 6// Default value for the medical_leave field
-    },
-    annual_leave: {
-        type: Number,
-        default: 10// Default value for the medical_leave field
-    },
+    
 
   
    
