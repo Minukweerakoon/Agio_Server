@@ -689,6 +689,20 @@ router.get('/event', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
     }
 });
+router.delete('/api/event/:id', async (req, res) => {
+    try {
+        const event = await Event.findByIdAndRemove(req.params.id);
+
+        if (!event) {
+            return res.status(404).send('No event found with that ID');
+        }
+
+        res.send(`Event '${event.title}' was deleted successfully`);
+    } catch (error) {
+        res.status(500).send('Error deleting the event: ' + error);
+    }
+});
+
 
 
 
