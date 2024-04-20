@@ -699,6 +699,7 @@ router.get('/event', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
     }
 });
+<<<<<<< Updated upstream
 router.delete('/deletevent/:id', async (req, res) => {
     try {
         
@@ -723,6 +724,19 @@ router.delete('/deletevent/:id', async (req, res) => {
             success: false, 
             error 
         });
+=======
+router.delete('/api/delevent/:id', async (req, res) => {
+    try {
+        const event = await Notice.findByIdAndRemove(req.params.id);
+
+        if (!event) {
+            return res.status(404).send('No Notice found with that ID');
+        }
+
+        res.send(`Notice '${event.title}' was deleted successfully`);
+    } catch (error) {
+        res.status(500).send('Error deleting the Notice: ' + error);
+>>>>>>> Stashed changes
     }
 });
 // PUT endpoint to update an event
