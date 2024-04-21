@@ -44,7 +44,9 @@ router.route("/uploadexcel").post(upload.single("csvFile"),async(req,res)=>{
 })
 
 router.route("/agg/:empid").post(async(req,res)=>{
+  console.log("agg/empid")
     const empid = req.params.empid;
+    console.log(empid)
     const period = req.body.time;
     console.log(period);
     console.log(empid);
@@ -139,6 +141,7 @@ router.route("/agg/:empid").post(async(req,res)=>{
     
 })
 router.route("/agg").post(authMiddleware2,async(req,res)=>{
+  console.log("hhhhh")
   const id = req.body.employeeId;
   const period = req.body.time;
   console.log(period);
@@ -668,6 +671,67 @@ router.route("/allrecords").get(async(req,res)=>{
   }
   
 })
+
+
+router.route("/allemployees").get(rewardassignmiddleware,async(req,res)=>{
+  const id = req.body.employeeId;
+  console.log(id);
+  console.log("dfdfdfdfdfdfdfdfdfd");
+
+  
+
+
+  try{
+    const result = await records.aggregate([
+      {
+        '$group': {
+          '_id': '$empid', 
+          'totalscore': {
+            '$sum': '$score'
+          }
+        }
+      }, {
+        '$sort': {
+          'totalscore': -1
+        }
+      },{
+        '$lookup': {
+          'from': 'employees', 
+          'localField': '_id', 
+          'foreignField': 'empid', 
+          'as': 'result'
+        }
+      }, {
+        '$unwind': {
+          'path': '$result'
+        }
+      },{
+        '$project': {
+          '_id': 1, 
+          'empid': '$_id', 
+          'Name': '$result.fname', 
+          'Group': '$result.Group', 
+          'Line': '$result.Line', 
+          'totalYieldDry': 1, 
+          'totalYieldCutsWet': 1, 
+          'totalGrade_A_Cuts': 1, 
+          'totalGrade_B_Cuts': 1, 
+          'totalGrade_C_Cuts': 1, 
+          'totalGrade_F_Cuts': 1, 
+          'totalscore': 1, 
+          'documents': 1
+        }
+      }
+    
+    ]);
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({error:"internal server error"})
+}
+})
+
+
 
 router.route("/rank5").get(rewardassignmiddleware,async(req,res)=>{
   const id = req.body.employeeId;
