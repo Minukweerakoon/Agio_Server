@@ -766,7 +766,7 @@ router.put('/updatevent/:id', async (req, res) => {
 
 ////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
 
-// POST route for creating a new inquiry
+// creating a new inquiry
 router.post('/inquiry', async (req, res) => {
     try {
       const inquiryID = generateInquiryID();
@@ -785,10 +785,10 @@ router.post('/inquiry', async (req, res) => {
   router.get('/my-inquiries/:username', async (req, res) => {
     try {
         const { username } = req.params;
-        const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries 
         const inquiriesWithID = inquiries.map(inquiry => ({
             ...inquiry.toJSON(),
-            inquiryID: inquiry.inquiryID // Assuming inquiryID is the field name in your database model
+            inquiryID: inquiry.inquiryID 
         }));
         res.status(200).json(inquiriesWithID);
     } catch (error) {
@@ -802,7 +802,7 @@ router.post('/inquiry', async (req, res) => {
   router.put('/updateinquiry/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const updatedFields = req.body; 
         const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
         if (!inquiry) {
             return res.status(404).json({ message: "Inquiry not found.", success: false });
@@ -863,7 +863,7 @@ router.put('/inquiry/:id/reply', async (req, res) => {
     const { reply } = req.body;
   
     try {
-      // Find the inquiry by ID and update the reply field
+      
       const inquiry = await Inquiry.findByIdAndUpdate(
         id,
         { reply, status: 'Done' }, // Update reply and set status to 'Done'
