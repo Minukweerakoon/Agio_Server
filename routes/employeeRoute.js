@@ -6,12 +6,9 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
-<<<<<<< HEAD
 const payment = require('../models/TraPymentModel');
-=======
 const Inquiry = require('../models/inquiryModel');
 
->>>>>>> 5184267398a0581c83c483d21dbfa1c8515e86ed
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
@@ -262,12 +259,12 @@ router.get('/getleave3/:id', async (req, res) => {
 router.put('/updateleave/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, Type, RangePicker, department, Description } = req.body;
+        const { name, Type, startDate, endDate, department, Description } = req.body;
 
-        // Assuming Announcement is a Mongoose model
+        // Assuming Leave is a Mongoose model
         const updatedleave = await Leave.findByIdAndUpdate(
             id,
-            { name, Type, RangePicker, department, Description },
+            { name, Type, startDate, endDate, department, Description },
             { new: true } // To return the updated document
         );
 
@@ -455,7 +452,6 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
-
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -605,7 +601,6 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
-
     }
 });
 
@@ -642,7 +637,6 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
-
     }
 });
 
@@ -1798,7 +1792,6 @@ router.get('/yearly-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
 
 
 
