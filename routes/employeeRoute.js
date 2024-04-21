@@ -6,16 +6,25 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const payment = require('../models/TraPymentModel');
+const Inquiry = require('../models/inquiryModel');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
-
+const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
 const Notice = require('../models/AnnCalFormModel')
 
+const generateInquiryID = () => {
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const inquiryID = `INQ${randomNumber.toString().padStart(5, '0')}`;
+    return inquiryID;
+  };
+
+  
 
 
 
@@ -101,13 +110,9 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 username: employee.username_log,
                 fullname:employee.fname,
                 password : employee.password_log,
-
-                _id: employee._id,
-
                 userid: employee._id,
                 empid :employee.empid,
                 department:employee.department
-
 
 
                 // Include other necessary fields here
@@ -257,12 +262,12 @@ router.get('/getleave3/:id', async (req, res) => {
 router.put('/updateleave/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, Type, RangePicker, department, Description } = req.body;
+        const { name, Type, startDate, endDate, department, Description } = req.body;
 
-        // Assuming Announcement is a Mongoose model
+        // Assuming Leave is a Mongoose model
         const updatedleave = await Leave.findByIdAndUpdate(
             id,
-            { name, Type, RangePicker, department, Description },
+            { name, Type, startDate, endDate, department, Description },
             { new: true } // To return the updated document
         );
 
@@ -599,53 +604,65 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
-
     }
 });
-
-
-
-
-router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
-    const { announcementId } = req.params;
-    const { text } = req.body;
-
-    if (!text) {
-        return res.status(400).json({ success: false, message: 'Comment text is required' });
-    }
-
+// Assuming you have a comments collection or a way to fetch comments from your database
+router.get('/comments', async (req, res) => {
     try {
-        // Find the announcement by ID
-        const announcement = await Announcement.findById(announcementId);
-
-        if (!announcement) {
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
-        }
-
-        // Add the comment to the announcement's comments array
-        announcement.comments.push({
-            text,
-            author: req.user.username, // Assuming you have authentication middleware that provides the user
-            createdAt: new Date(),
-        });
-
-        // Save the updated announcement
-        await announcement.save();
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+      const comments = await Announcement.find();
+      res.status(200).json(comments);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-
+      res.status(500).send(error.message);
     }
-});
+  });
+  
+
+
+
+
+// router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
+//     const { announcementId } = req.params;
+//     const { text } = req.body;
+
+//     if (!text) {
+//         return res.status(400).json({ success: false, message: 'Comment text is required' });
+//     }
+
+//     try {
+//         // Find the announcement by ID
+//         const announcement = await Announcement.findById(announcementId);
+
+//         if (!announcement) {
+//             return res.status(404).json({ success: false, message: 'Announcement not found' });
+//         }
+
+//         // Add the comment to the announcement's comments array
+//         announcement.comments.push({
+//             text,
+//             author: req.user.username, // Assuming you have authentication middleware that provides the user
+//             createdAt: new Date(),
+//         });
+
+//         // Save the updated announcement
+//         await announcement.save();
+
+//         res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+
+//     }
+// });
 
 
 
 
 router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
     const { announcementId } = req.params;
-    const { text } = req.body;
+    const { text, empId } = req.body;
+
+    console.log(empId);
+    console.log(req.body);
 
     if (!text) {
         return res.status(400).json({ success: false, message: 'Comment text is required' });
@@ -656,26 +673,37 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
         const announcement = await Announcement.findById(announcementId);
 
         if (!announcement) {
+            // If the announcement doesn't exist, return an error immediately.
             return res.status(404).json({ success: false, message: 'Announcement not found' });
         }
 
+        // Ensure the announcement has an initialized comments array
+        if (!announcement.comment) {
+            announcement.comment = [];
+        }
+
         // Add the comment to the announcement's comments array
-        announcement.comment.push({
+        const newComment = {
             text,
-             // Assuming you have authentication middleware that provides the user
+            empId, // employee ID from the request
             createdAt: new Date(),
-        });
+        };
+
+        console.log(newComment);
+
+        announcement.comment.push(newComment);
 
         // Save the updated announcement
         await announcement.save();
         
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comment[announcement.comment.length - 1] });
+        // Return the latest comment added along with a success message
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: newComment });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+
 router.post('/AnnCalNotice', async (req, res) => {
     try {
         
@@ -699,24 +727,180 @@ router.get('/event', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve general getNotice.", success: false, error });
     }
 });
-router.delete('/api/event/:id', async (req, res) => {
+router.delete('/deletevent/:id', async (req, res) => {
     try {
-        const event = await Event.findByIdAndRemove(req.params.id);
+        const { id } = req.params;
+        // Assuming EventModel is your model for the events collection
+        const event = await Notice.findByIdAndDelete(req.params.id);
 
         if (!event) {
-            return res.status(404).send('No event found with that ID');
+            return res.status(404).send({ 
+                message: "Event not found.", 
+                success: false 
+            });
         }
 
-        res.send(`Event '${event.title}' was deleted successfully`);
+        res.status(200).send({ 
+            message: "Event deleted successfully", 
+            success: true 
+        });
     } catch (error) {
-        res.status(500).send('Error deleting the event: ' + error);
+        console.error('Failed to delete the event:', error);
+        res.status(500).send({ 
+            message: "Failed to delete event.", 
+            success: false, 
+            error 
+        });
     }
 });
+router.delete('/deletebooking/:id', async (req, res) => {
+    try {
+        const updatedEvent = await Notice.findByIdAndUpdate(id, {
+            title,
+            description,
+            submission,
+            expiryDate
+        }, { new: true });
+
+        if (!updatedEvent) {
+            return res.status(404).send({ message: "Event not found.", success: false });
+        }
+
+        res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+    } catch (error) {
+        console.error('Failed to update the event:', error);
+        res.status(500).send({ message: "Failed to update event.", success: false, error });
+    }
+});
+
+
+////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
+
+// creating a new inquiry
+router.post('/inquiry', async (req, res) => {
+    try {
+      const inquiryID = generateInquiryID();
+      const inquiry = new Inquiry({
+        inquiryID,
+        ...req.body
+      });
+      await inquiry.save();
+      res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
+    } catch (error) {
+      console.error("Error uploading inquiry:", error);
+      res.status(500).send({ message: "Inquiry upload unsuccessful", success: false, error: error.message });
+    }
+  });
+
+  router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries 
+        const inquiriesWithID = inquiries.map(inquiry => ({
+            ...inquiry.toJSON(),
+            inquiryID: inquiry.inquiryID 
+        }));
+        res.status(200).json(inquiriesWithID);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+});
+
+
+  // Update inquiry status
+  router.put('/updateinquiry/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedFields = req.body; 
+        const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
+        if (!inquiry) {
+            return res.status(404).json({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).json({ message: "Inquiry updated successfully", success: true, inquiry });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update inquiry", success: false, error });
+    }
+});
+
+
+  
+//  deleting an inquiry
+router.delete('/deleteinquiry/:id', async (req, res) => {
+    try {
+        const inquiry = await Inquiry.findByIdAndDelete(req.params.id);
+        if (!inquiry) {
+            return res.status(404).send({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).send({ message: "Inquiry deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete inquiry request.", success: false, error });
+    }
+});
+
+
+//Admins Code
+
+router.get('/all-inquiries', async (req, res) => {
+    try {
+      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+
+  router.put('/:id/update-status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+  
+    try {
+      const inquiry = await Inquiry.findByIdAndUpdate(id, { status }, { new: true });
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  });
+  
+  // Route for replying to an inquiry
+router.put('/inquiry/:id/reply', async (req, res) => {
+    const { id } = req.params;
+    const { reply } = req.body;
+  
+    try {
+      
+      const inquiry = await Inquiry.findByIdAndUpdate(
+        id,
+        { reply, status: 'Done' }, // Update reply and set status to 'Done'
+        { new: true }
+      );
+      
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error replying to inquiry:', error);
+      res.status(500).json({ error: 'Failed to send reply' });
+    }
+  });
+  
+  
+ 
+
+////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
+
+
+
+
 
 
 
 
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
+
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
@@ -836,7 +1020,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Leave not found." });
         }
 
-        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
+        res.json({ success: true, message: "Booking updated successfully.", bookings: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -1057,6 +1241,25 @@ router.put('/updatevehicles/:id', async (req, res) => {
          res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
      }
  });
+
+
+ router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
+
+// Payment booking slip upload
+router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const file = req.file.filename; 
+
+        const pay = new payment({ file }); 
+        await pay.save();
+        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
+    }
+});
 
 module.exports = router;
 
@@ -1620,6 +1823,50 @@ router.get('/yearly-annual-leaves', async (req, res) => {
     }
 });
 
+router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
+    const oid = req.params.id;
+    try {
+        const employee = await Employee.findOne({ _id: oid });
+        if (!employee) {
+            return res.status(200).send({ message: "Employee does not exist", success: false });
+        } else {
+            // Extract isAdmin value from the employee document
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
+
+
+
+
+            // Send response with isAdmin value and other data
+            res.status(200).send({ success: true, data: { 
+                isAdmin,
+                isAnnHrsup,
+                isDoctor,
+                isLeaveHrsup,
+                islogisticsMan,
+                isuniform,
+                isinsu,
+                isinquiry,
+                isperfomace,
+                seenNotifications,
+                unseenNotifications,
+                medical_leave,
+                annual_leave,
+                general_leave,
+                username: employee.username_log,
+                fullname:employee.fname,
+                password : employee.password_log,
+                userid: employee._id,
+                empid :employee.empid,
+                department:employee.department
+
+
+                // Include other necessary fields here
+            } });
+        }
+    } catch (error) {
+        res.status(500).send({ message: "Error getting user info", success: false, error });
+    }
+});
 
 
 
