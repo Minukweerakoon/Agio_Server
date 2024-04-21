@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema(
     status: {
         type: String,
         default: "Pending",
+    },
+    method: {
+        type: String,
+        default: "Pending",
+    },
+    insuranceID: {
+        type: String,
     }
     }, 
     {
