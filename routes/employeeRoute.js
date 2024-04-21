@@ -18,6 +18,13 @@ const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
 const Notice = require('../models/AnnCalFormModel')
 
+const generateInquiryID = () => {
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const inquiryID = `INQ${randomNumber.toString().padStart(5, '0')}`;
+    return inquiryID;
+  };
+
+  
 
 
 
@@ -103,13 +110,9 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 username: employee.username_log,
                 fullname:employee.fname,
                 password : employee.password_log,
-
-                _id: employee._id,
-
                 userid: employee._id,
                 empid :employee.empid,
                 department:employee.department
-
 
 
                 // Include other necessary fields here
@@ -259,12 +262,12 @@ router.get('/getleave3/:id', async (req, res) => {
 router.put('/updateleave/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, Type, RangePicker, department, Description } = req.body;
+        const { name, Type, startDate, endDate, department, Description } = req.body;
 
-        // Assuming Announcement is a Mongoose model
+        // Assuming Leave is a Mongoose model
         const updatedleave = await Leave.findByIdAndUpdate(
             id,
-            { name, Type, RangePicker, department, Description },
+            { name, Type, startDate, endDate, department, Description },
             { new: true } // To return the updated document
         );
 
@@ -452,7 +455,6 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
-
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -602,53 +604,65 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
-
     }
 });
-
-
-
-
-router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
-    const { announcementId } = req.params;
-    const { text } = req.body;
-
-    if (!text) {
-        return res.status(400).json({ success: false, message: 'Comment text is required' });
-    }
-
+// Assuming you have a comments collection or a way to fetch comments from your database
+router.get('/comments', async (req, res) => {
     try {
-        // Find the announcement by ID
-        const announcement = await Announcement.findById(announcementId);
-
-        if (!announcement) {
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
-        }
-
-        // Add the comment to the announcement's comments array
-        announcement.comments.push({
-            text,
-            author: req.user.username, // Assuming you have authentication middleware that provides the user
-            createdAt: new Date(),
-        });
-
-        // Save the updated announcement
-        await announcement.save();
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+      const comments = await Announcement.find();
+      res.status(200).json(comments);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-
+      res.status(500).send(error.message);
     }
-});
+  });
+  
+
+
+
+
+// router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
+//     const { announcementId } = req.params;
+//     const { text } = req.body;
+
+//     if (!text) {
+//         return res.status(400).json({ success: false, message: 'Comment text is required' });
+//     }
+
+//     try {
+//         // Find the announcement by ID
+//         const announcement = await Announcement.findById(announcementId);
+
+//         if (!announcement) {
+//             return res.status(404).json({ success: false, message: 'Announcement not found' });
+//         }
+
+//         // Add the comment to the announcement's comments array
+//         announcement.comments.push({
+//             text,
+//             author: req.user.username, // Assuming you have authentication middleware that provides the user
+//             createdAt: new Date(),
+//         });
+
+//         // Save the updated announcement
+//         await announcement.save();
+
+//         res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+
+//     }
+// });
 
 
 
 
 router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
     const { announcementId } = req.params;
-    const { text } = req.body;
+    const { text, empId } = req.body;
+
+    console.log(empId);
+    console.log(req.body);
 
     if (!text) {
         return res.status(400).json({ success: false, message: 'Comment text is required' });
@@ -659,26 +673,37 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
         const announcement = await Announcement.findById(announcementId);
 
         if (!announcement) {
+            // If the announcement doesn't exist, return an error immediately.
             return res.status(404).json({ success: false, message: 'Announcement not found' });
         }
 
+        // Ensure the announcement has an initialized comments array
+        if (!announcement.comment) {
+            announcement.comment = [];
+        }
+
         // Add the comment to the announcement's comments array
-        announcement.comment.push({
+        const newComment = {
             text,
-             // Assuming you have authentication middleware that provides the user
+            empId, // employee ID from the request
             createdAt: new Date(),
-        });
+        };
+
+        console.log(newComment);
+
+        announcement.comment.push(newComment);
 
         // Save the updated announcement
         await announcement.save();
         
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comment[announcement.comment.length - 1] });
+        // Return the latest comment added along with a success message
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: newComment });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+
 router.post('/AnnCalNotice', async (req, res) => {
     try {
         
@@ -704,7 +729,7 @@ router.get('/event', async (req, res) => {
 });
 router.delete('/deletevent/:id', async (req, res) => {
     try {
-        
+        const { id } = req.params;
         // Assuming EventModel is your model for the events collection
         const event = await Notice.findByIdAndDelete(req.params.id);
 
@@ -728,15 +753,7 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
-// PUT endpoint to update an event
-router.put('/updatevent/:id', async (req, res) => {
-    const { id } = req.params;
-    const { title, description, submission, expiryDate } = req.body;
-
-    if (!id) {
-        return res.status(400).send({ message: "Event ID is required", success: false });
-    }
-
+router.delete('/deletebooking/:id', async (req, res) => {
     try {
         const updatedEvent = await Notice.findByIdAndUpdate(id, {
             title,
@@ -757,35 +774,45 @@ router.put('/updatevent/:id', async (req, res) => {
 });
 
 
+////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
+
+// creating a new inquiry
 router.post('/inquiry', async (req, res) => {
     try {
-        
-        const inquiry = new Inquiry (req.body);
-        await inquiry.save();
-        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
+      const inquiryID = generateInquiryID();
+      const inquiry = new Inquiry({
+        inquiryID,
+        ...req.body
+      });
+      await inquiry.save();
+      res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
+      console.error("Error uploading inquiry:", error);
+      res.status(500).send({ message: "Inquiry upload unsuccessful", success: false, error: error.message });
+    }
+  });
+
+  router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries 
+        const inquiriesWithID = inquiries.map(inquiry => ({
+            ...inquiry.toJSON(),
+            inquiryID: inquiry.inquiryID 
+        }));
+        res.status(200).json(inquiriesWithID);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch inquiries.' });
     }
 });
 
-router.get('/my-inquiries/:username', async (req, res) => {
-    try {
-      const { username } = req.params;
-      const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
-      res.status(200).json(inquiries);
-      console.log(inquiries);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to fetch inquiries.' });
-    }
-  });
-  
+
   // Update inquiry status
   router.put('/updateinquiry/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const updatedFields = req.body; 
         const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
         if (!inquiry) {
             return res.status(404).json({ message: "Inquiry not found.", success: false });
@@ -846,7 +873,7 @@ router.put('/inquiry/:id/reply', async (req, res) => {
     const { reply } = req.body;
   
     try {
-      // Find the inquiry by ID and update the reply field
+      
       const inquiry = await Inquiry.findByIdAndUpdate(
         id,
         { reply, status: 'Done' }, // Update reply and set status to 'Done'
@@ -861,9 +888,9 @@ router.put('/inquiry/:id/reply', async (req, res) => {
   });
   
   
-  module.exports = router;
+ 
 
-
+////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
 
 
 
@@ -1796,7 +1823,50 @@ router.get('/yearly-annual-leaves', async (req, res) => {
     }
 });
 
+router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
+    const oid = req.params.id;
+    try {
+        const employee = await Employee.findOne({ _id: oid });
+        if (!employee) {
+            return res.status(200).send({ message: "Employee does not exist", success: false });
+        } else {
+            // Extract isAdmin value from the employee document
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
 
+
+
+
+            // Send response with isAdmin value and other data
+            res.status(200).send({ success: true, data: { 
+                isAdmin,
+                isAnnHrsup,
+                isDoctor,
+                isLeaveHrsup,
+                islogisticsMan,
+                isuniform,
+                isinsu,
+                isinquiry,
+                isperfomace,
+                seenNotifications,
+                unseenNotifications,
+                medical_leave,
+                annual_leave,
+                general_leave,
+                username: employee.username_log,
+                fullname:employee.fname,
+                password : employee.password_log,
+                userid: employee._id,
+                empid :employee.empid,
+                department:employee.department
+
+
+                // Include other necessary fields here
+            } });
+        }
+    } catch (error) {
+        res.status(500).send({ message: "Error getting user info", success: false, error });
+    }
+});
 
 
 
