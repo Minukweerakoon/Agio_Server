@@ -10,10 +10,7 @@ module.exports = async (req, res, next) => {
                     success: false
                 });
             } else {
-
-                req.body.userId = decoded._id;
-                req.body.isAdmin = decoded.isAdmin;
-
+                req.body.employeeId = decoded.id;
                 next();
             }
         });

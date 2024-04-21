@@ -45,18 +45,25 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.post('/get-user-info-by-id', authMiddleware, async (req, res) => {
+router.post('/get-user-info-by-id', authMiddleware, async (req,res) => {
     try {
+        
         const user = await User.findOne({ _id: req.body.userId });
         if (!user) {
             return res.status(200).send({ message: "User does not exist", success: false });
         } else {
-            res.status(200).send({ message: "User found", success: true, data: User });
+            res.status(200).send({ message: "User found", success: true, data:{
+                email: user.email,
+                name : user.name,
+            }});
         }
     } catch (error) {
-        console.log(error);
+       
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
+
+//announcement-- mage tika THYENNE METHANINN ONNAAA
+ 
 
 module.exports = router;
