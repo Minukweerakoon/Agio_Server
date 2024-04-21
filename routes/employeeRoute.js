@@ -262,12 +262,12 @@ router.get('/getleave3/:id', async (req, res) => {
 router.put('/updateleave/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, Type, RangePicker, department, Description } = req.body;
+        const { name, Type, startDate, endDate, department, Description } = req.body;
 
-        // Assuming Announcement is a Mongoose model
+        // Assuming Leave is a Mongoose model
         const updatedleave = await Leave.findByIdAndUpdate(
             id,
-            { name, Type, RangePicker, department, Description },
+            { name, Type, startDate, endDate, department, Description },
             { new: true } // To return the updated document
         );
 
@@ -455,7 +455,6 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
-
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -605,7 +604,6 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
-
     }
 });
 // Assuming you have a comments collection or a way to fetch comments from your database
@@ -1869,7 +1867,6 @@ router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
-
 
 
 

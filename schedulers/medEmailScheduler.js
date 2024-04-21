@@ -6,7 +6,18 @@ const EventEmitter = require('events');
 const emitter = new EventEmitter();
 
 // Run the medMonthlyReport
-const medMonthlyReport = require("../required/medMonthlyReport");
+const generateReport = require("../required/medMonthlyReport");
+
+
+// Get doctor's email
+var DOCTOR_EMAIL = null;
+const getDoctorEmail = async () => {
+    DOCTOR_EMAIL = "dinuravimukthi66@gmail.com";
+}
+
+getDoctorEmail();
+
+
 
 
 // Transporter
@@ -23,23 +34,28 @@ const transporter = nodemailer.createTransport({
   
 
 // Options for the email
-const mailOptions = {
-    from: {
-        name: "Agio Support",
-        address: process.env.EMAIL_USER, 
-    }, // sender address
-    to: ["dinuravimukthi66@gmail.com"], // list of receivers
-    subject: "Agio Medical Appointment Monthly Report", // Subject line
-    text: "This is the report for the month:  . Please check the attachments for the report document.", // plain text body
-    html: "<p>This is the report for the month: <b></b>.<br>Please check the attachments for the report document.</p>", // html body
-    attachments: [
-        {
-            filename: 'Report.pdf',
-            path: 'C://Users//Dinura Vimukthi//Documents//GitHub//agio-server//pdf//Report.pdf',
-            contentType: 'application/pdf'
-        },
-    ]
-};
+var mailOptions = {};
+
+const setMailOptions = (monthName) => {
+    
+    mailOptions = {
+        from: {
+            name: "Agio Support",
+            address: process.env.EMAIL_USER, 
+        }, 
+        to: [DOCTOR_EMAIL], 
+        subject: "Agio Medical Appointment Monthly Report", 
+        text: `This is the report for the month ${monthName}. Please check the attachments for the report document.`, 
+        html: `<p>This is the report for the month <b>${monthName}</b> <b></b>.<br>Please check the attachments for the report document.</p>`, // html body
+        attachments: [
+            {
+                filename: 'Report.pdf',
+                path: 'C://Users//Dinura Vimukthi//Documents//GitHub//agio-server//report.pdf',//'C://Users//Dinura Vimukthi//Documents//GitHub//agio-server//pdf//Report.pdf'
+                contentType: 'application/pdf'
+            },
+        ]
+    };
+}
 
 
 /*
@@ -56,18 +72,26 @@ const sendEmail = async (transporter, mailOptions) => {
     }
 }
 
-const medMonthlyReportGenerateScheduler = schedule.scheduleJob('* * * * *', () => {
-    console.log('Med email scheduler ran');
-    
-    medMonthlyReport();
-    medMonthlyReportGenerateScheduler.cancel();
-})
+
 
 /*
-
 emitter.on('medEmailScheduler', () => {
     console.log('got medEmailScheduler event @medEmailScheduler()');
 }) */
+
+/*
+ * 
+ * 
+ Scheduler for generating the email
+ * 
+ */
+// Run the scheduler at 00:10 on the 1st day of every month => '10 0 1 * *'
+const medMonthlyReportGenerateScheduler = schedule.scheduleJob('10 0 1 * *', () => {
+    console.log('Med email scheduler ran');
+    
+    generateReport();
+    
+})
 
 /*
  * 
@@ -77,7 +101,9 @@ emitter.on('medEmailScheduler', () => {
  */
 // Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *'
 const medMonthlyReportScheduler = schedule.scheduleJob('30 0 1 * *', () => {
-    
+
+    var monthName = new Date(new Date().setDate(new Date().getDate()-1)).toLocaleString('default', { month: 'long' })
+    setMailOptions(monthName);
     sendEmail(transporter, mailOptions);
     
 })
