@@ -142,9 +142,9 @@ Read existing available dates
 router.post("/medical-available-dates-read-existing", authMiddleware, async (req, res) => {
     try {
         const existingDatesResponse = await AvailableDate.find(
-          {
-            status: "available",
-          }
+        {  date: {
+            $gte: new Date(new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate()).toISOString(),
+        }}
         );
 
         if (existingDatesResponse) {
@@ -521,7 +521,7 @@ router.post("/medical-reports-read-all-available-dates-specific-period", authMid
               success: true,
               fetched: response,
           });
-          console.log("Existing available dates: ", response);
+          console.log("Existing available dates retrieved ");
       } else {
           res.status(200).send({
               message: "No existing available date records were found for the given period",
