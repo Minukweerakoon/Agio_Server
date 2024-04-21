@@ -18,6 +18,13 @@ const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
 const Notice = require('../models/AnnCalFormModel')
 
+const generateInquiryID = () => {
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const inquiryID = `INQ${randomNumber.toString().padStart(5, '0')}`;
+    return inquiryID;
+  };
+
+  
 
 
 
@@ -757,30 +764,40 @@ router.put('/updatevent/:id', async (req, res) => {
 });
 
 
+////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
+
+// POST route for creating a new inquiry
 router.post('/inquiry', async (req, res) => {
     try {
-        
-        const inquiry = new Inquiry (req.body);
-        await inquiry.save();
-        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
+      const inquiryID = generateInquiryID();
+      const inquiry = new Inquiry({
+        inquiryID,
+        ...req.body
+      });
+      await inquiry.save();
+      res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
+      console.error("Error uploading inquiry:", error);
+      res.status(500).send({ message: "Inquiry upload unsuccessful", success: false, error: error.message });
+    }
+  });
+
+  router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
+        const inquiriesWithID = inquiries.map(inquiry => ({
+            ...inquiry.toJSON(),
+            inquiryID: inquiry.inquiryID // Assuming inquiryID is the field name in your database model
+        }));
+        res.status(200).json(inquiriesWithID);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch inquiries.' });
     }
 });
 
-router.get('/my-inquiries/:username', async (req, res) => {
-    try {
-      const { username } = req.params;
-      const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
-      res.status(200).json(inquiries);
-      console.log(inquiries);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to fetch inquiries.' });
-    }
-  });
-  
+
   // Update inquiry status
   router.put('/updateinquiry/:id', async (req, res) => {
     try {
@@ -861,9 +878,9 @@ router.put('/inquiry/:id/reply', async (req, res) => {
   });
   
   
-  module.exports = router;
+ 
 
-
+////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
 
 
 
