@@ -6,12 +6,13 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const payment = require('../models/TraPymentModel');
 const Inquiry = require('../models/inquiryModel');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
-
+const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
@@ -458,6 +459,7 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
+
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -886,7 +888,9 @@ router.put('/inquiry/:id/reply', async (req, res) => {
 
 
 
+
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
+
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
@@ -1006,7 +1010,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Leave not found." });
         }
 
-        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
+        res.json({ success: true, message: "Booking updated successfully.", bookings: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -1227,6 +1231,25 @@ router.put('/updatevehicles/:id', async (req, res) => {
          res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
      }
  });
+
+
+ router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
+
+// Payment booking slip upload
+router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const file = req.file.filename; 
+
+        const pay = new payment({ file }); 
+        await pay.save();
+        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
+    }
+});
 
 module.exports = router;
 
@@ -1789,6 +1812,7 @@ router.get('/yearly-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 
