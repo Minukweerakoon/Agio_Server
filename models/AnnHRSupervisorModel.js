@@ -37,8 +37,9 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   comment: [{
+    
     text: String,
-    author: String,
+    empId :String,
     createdAt: Date
 }]
   
