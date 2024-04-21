@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
-
-const userSchema = new mongoose.Schema({
-    name: {
+const inquirySchema = new mongoose.Schema({
+    userid: {
         type: String,
         required: true
     },
@@ -10,26 +9,47 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    name: {
+        type: String,
+        required: true
+    },
     inquirydate: {
-        type: Date,
-        required: true,
-        
+        type: Date, // Keep the type as Date
+        required: true
     },
     phoneNumber: {
         type: String,
-        required: true,
-        
+        required: true
     },
     describe: {
         type: String,
         required: true
     },
-   
+    status: {
+        type: String,
+        enum: ['Pending', 'Done'],
+        default: 'Pending'
+    },
+    reply: {
+        type: String
+    },
+    inquiryID: {
+        type: String,
+        required: true,
+        unique: true
+    }
 }, {
     timestamps: true
 });
 
+// Middleware function to extract only the date part of inquirydate
+inquirySchema.pre('save', function(next) {
+    // Extract date part only and set it to the inquiry date field
+    this.inquirydate = this.inquirydate.toISOString().split('T')[0];
+    next();
+});
 
 
-const inquiryModel = mongoose.model("Inquiry", userSchema);
-module.exports = inquiryModel;
+const Inquiry = mongoose.model('Inquiry', inquirySchema);
+
+module.exports = Inquiry;

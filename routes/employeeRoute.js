@@ -6,16 +6,25 @@ const authMiddleware = require("../middleware/authMiddleware2");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
+const payment = require('../models/TraPymentModel');
+const Inquiry = require('../models/inquiryModel');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
 const Vregister = require('../models/TraVehicleModule')
-
+const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
 const Notice = require('../models/AnnCalFormModel')
 
+const generateInquiryID = () => {
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const inquiryID = `INQ${randomNumber.toString().padStart(5, '0')}`;
+    return inquiryID;
+  };
+
+  
 
 
 
@@ -446,6 +455,7 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
+
 //announcments
 router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
@@ -747,16 +757,143 @@ router.delete('/deletevent/:id', async (req, res) => {
 });
 router.delete('/deletebooking/:id', async (req, res) => {
     try {
-        const bookings = await booking.findByIdAndDelete(req.params.id);
-         if (!bookings) {
-             return res.status(404).send({ message: "Booking not found.", success: false });
-         }
-         res.status(200).send({ message: "Booking deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
-     }
- });
+        const updatedEvent = await Notice.findByIdAndUpdate(id, {
+            title,
+            description,
+            submission,
+            expiryDate
+        }, { new: true });
+
+        if (!updatedEvent) {
+            return res.status(404).send({ message: "Event not found.", success: false });
+        }
+
+        res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+    } catch (error) {
+        console.error('Failed to update the event:', error);
+        res.status(500).send({ message: "Failed to update event.", success: false, error });
+    }
+});
+
+
+////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
+
+// POST route for creating a new inquiry
+router.post('/inquiry', async (req, res) => {
+    try {
+      const inquiryID = generateInquiryID();
+      const inquiry = new Inquiry({
+        inquiryID,
+        ...req.body
+      });
+      await inquiry.save();
+      res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
+    } catch (error) {
+      console.error("Error uploading inquiry:", error);
+      res.status(500).send({ message: "Inquiry upload unsuccessful", success: false, error: error.message });
+    }
+  });
+
+  router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
+        const inquiriesWithID = inquiries.map(inquiry => ({
+            ...inquiry.toJSON(),
+            inquiryID: inquiry.inquiryID // Assuming inquiryID is the field name in your database model
+        }));
+        res.status(200).json(inquiriesWithID);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+});
+
+
+  // Update inquiry status
+  router.put('/updateinquiry/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
+        if (!inquiry) {
+            return res.status(404).json({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).json({ message: "Inquiry updated successfully", success: true, inquiry });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update inquiry", success: false, error });
+    }
+});
+
+
+  
+//  deleting an inquiry
+router.delete('/deleteinquiry/:id', async (req, res) => {
+    try {
+        const inquiry = await Inquiry.findByIdAndDelete(req.params.id);
+        if (!inquiry) {
+            return res.status(404).send({ message: "Inquiry not found.", success: false });
+        }
+        res.status(200).send({ message: "Inquiry deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete inquiry request.", success: false, error });
+    }
+});
+
+
+//Admins Code
+
+router.get('/all-inquiries', async (req, res) => {
+    try {
+      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      res.status(200).json(inquiries);
+      console.log(inquiries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to fetch inquiries.' });
+    }
+  });
+
+  router.put('/:id/update-status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+  
+    try {
+      const inquiry = await Inquiry.findByIdAndUpdate(id, { status }, { new: true });
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      res.status(500).json({ error: 'Failed to update status' });
+    }
+  });
+  
+  // Route for replying to an inquiry
+router.put('/inquiry/:id/reply', async (req, res) => {
+    const { id } = req.params;
+    const { reply } = req.body;
+  
+    try {
+      // Find the inquiry by ID and update the reply field
+      const inquiry = await Inquiry.findByIdAndUpdate(
+        id,
+        { reply, status: 'Done' }, // Update reply and set status to 'Done'
+        { new: true }
+      );
+      
+      res.json(inquiry);
+    } catch (error) {
+      console.error('Error replying to inquiry:', error);
+      res.status(500).json({ error: 'Failed to send reply' });
+    }
+  });
+  
+  
+ 
+
+////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
+
 
 
 
@@ -765,6 +902,7 @@ router.delete('/deletebooking/:id', async (req, res) => {
 
 
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
+
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
@@ -884,7 +1022,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Leave not found." });
         }
 
-        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
+        res.json({ success: true, message: "Booking updated successfully.", bookings: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -1105,6 +1243,25 @@ router.put('/updatevehicles/:id', async (req, res) => {
          res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
      }
  });
+
+
+ router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
+
+// Payment booking slip upload
+router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const file = req.file.filename; 
+
+        const pay = new payment({ file }); 
+        await pay.save();
+        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
+    }
+});
 
 module.exports = router;
 
@@ -1712,6 +1869,7 @@ router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
+
 
 
 
