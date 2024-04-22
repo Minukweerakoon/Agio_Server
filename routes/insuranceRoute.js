@@ -37,7 +37,7 @@ router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
 
 
 // Get the insurance data by id 
-router.get('/getInsuranceEmployee/:userId', authMiddleware,async (req, res) => {
+router.get('/getInsuranceEmployee/:userId', async (req, res) => {
     try {
         const userId = req.params.userId; 
         console.log(userId);
