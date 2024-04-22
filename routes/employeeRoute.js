@@ -8,6 +8,8 @@ const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const payment = require('../models/TraPymentModel');
 const Inquiry = require('../models/inquiryModel');
+const attendanceModel = require('../models/AttendanceModel');
+const csvtojson = require('csvtojson');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
@@ -534,6 +536,8 @@ router.get('/getAnnHRsupSpecific', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
     }
 });
+
+
 router.get('/getAnnHRsup2/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1867,6 +1871,30 @@ router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
         res.status(500).send({ message: "Error getting user info", success: false, error });
     }
 });
+
+//attendance
+router.post("/uploadexcelattendance", upload.single("csvFile"), async (req, res) => {
+    
+    try {
+        const jsonArray = await csvtojson().fromFile(req.file.path);
+        await attendanceModel.create(jsonArray);
+        return res.json("Data added successfully");
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+});
+
+//read attendance
+router.get('/attendance', async (req, res) => {
+    try {
+        const attendanceData = await attendanceModel.find({ attendance: false }, { empid: 1, username_log: 1, createdAt: 1 });
+        return res.json(attendanceData);
+    } catch (error) {
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 
 
 
