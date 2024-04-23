@@ -753,7 +753,7 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
-router.delete('/deletebooking/:id', async (req, res) => {
+router.delete('/siyathugoiya/:id', async (req, res) => {
     try {
         const updatedEvent = await Notice.findByIdAndUpdate(id, {
             title,
@@ -910,7 +910,7 @@ router.post("/TraBooking", authMiddleware2, async (req, res) => {
         const logistic = await Employee.findOne({islogisticsMan:true})
         const unseenNotifications = logistic.unseenNotifications
         unseenNotifications.push({
-            type:"New leave request",
+            type:"New Booking request",
             message :`${ Booking.EmpName} has submitted a Booking request`,
             data:{
                 bookingid:Booking._id,
@@ -943,10 +943,10 @@ router.get('/getTraBooking', async (req, res) => {
         let bookings;
         
         if (userid) {
-            // If userId is provided, filter leave details by userId
+            // If userId is provided, filter Bokking details by userId
             bookings = await booking.find({ userid });
         } else {
-            // If userId is not provided, fetch all leave details
+            // If userId is not provided, fetch all Booking details
             bookings = await booking.find();
         }
 
@@ -1070,18 +1070,21 @@ const unseenNotifications = user.unseenNotifications
 
 
 // DELETE Booking
- router.delete('/deletebooking/:id', async (req, res) => {
+router.delete('/deletebooking/:id', async (req, res) => {
+    console.log("delete roue")
+    console.log(req.params.id)
     try {
         const bookings = await booking.findByIdAndDelete(req.params.id);
-         if (!bookings) {
-             return res.status(404).send({ message: "Booking not found.", success: false });
-         }
-         res.status(200).send({ message: "Booking deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
-     }
- });
+        if (!bookings) {
+            return res.status(404).send({ message: "Booking not found.", success: false });
+        }
+        res.status(200).send({ message: "Booking deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
+    }
+});
+
 
 
  
