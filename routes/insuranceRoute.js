@@ -9,20 +9,32 @@ const authMiddleware = require('../middleware/authMiddleware2');
 // Serve files from the 'uploads' directory
 router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Post the insurance data
+
 router.post('/insClaimSubmit', upload.single('file'), async (req, res) => {
     try {
         const { name, id, phoneNumber, description } = req.body;
         const file = req.file.filename; 
 
-        const newInsurance = new Insurance({ name, id, phoneNumber, description, file }); 
+        // Generate unique INS number (INS + random 4-digit number + timestamp)
+        const insuranceID = `INS${Math.floor(1000 + Math.random() * 9000)}`;
+
+        const newInsurance = new Insurance({ 
+            insuranceID,
+            name,
+            id,
+            phoneNumber,
+            description,
+            file
+        }); 
         await newInsurance.save();
+        
         res.status(200).send({ message: "Claim submission successful.", success: true, userId: id });
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Claim submission unsuccessful.", success: false, error });
     }
 });
+
 
 // Get the insurance data by id 
 router.get('/getInsuranceEmployee/:userId', authMiddleware,async (req, res) => {
@@ -146,5 +158,27 @@ router.put('/changeStatus/:id', async (req, res) => {
     }
 });
 
+// Update insurance method
+router.put('/changeMethod/:id', async (req, res) => {
+    const id = req.params.id;
+    const { method } = req.body;
+
+    try {
+        const updatedInsurance = await Insurance.findByIdAndUpdate(
+            id,
+            { method }, 
+            { new: true }
+        );
+
+        if (!updatedInsurance) {
+            return res.status(404).json({ success: false, message: "Insurance not found." });
+        }
+
+        res.json({ success: true, message: `Insurance Method updated to ${method} successfully.`, insurance: updatedInsurance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
 
 module.exports = router;
