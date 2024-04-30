@@ -117,7 +117,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 department:employee.department
 
 
-                // Include other necessary fields here
+            
             } });
         }
     } catch (error) {
@@ -161,14 +161,14 @@ router.post("/leaveEmpform", authMiddleware2,upload.single('file') ,async (req, 
 
 router.get('/getleave', async (req, res) => {
     try {
-        const userid = req.query.userid; // Extract userId from query parameter
+        const userid = req.query.userid; 
         let leave;
         
         if (userid) {
-            // If userId is provided, filter leave details by userId
+            
             leave = await Leave.find({ userid });
         } else {
-            // If userId is not provided, fetch all leave details
+           
             leave = await Leave.find();
         }
 
