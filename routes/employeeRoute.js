@@ -903,36 +903,38 @@ router.put('/inquiry/:id/reply', async (req, res) => {
 
 
 // POST a new Booking
+// POST a new Booking
+// POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
-        const Booking = new booking({...req.body ,status :"pending"})
-        await Booking.save();
-        const logistic = await Employee.findOne({islogisticsMan:true})
-        const unseenNotifications = logistic.unseenNotifications
-        unseenNotifications.push({
-            type:"New Booking request",
-            message :`${ Booking.EmpName} has submitted a Booking request`,
-            data:{
-                bookingid:Booking._id,
-                name: Booking.EmpName,
-            },
-            onclickpath:"/"
-
+        const { vehicleId } = req.body;
+        const vehicle = await Vregister.findById(vehicleId);
+        if (!vehicle) {
+            return res.status(404).json({ success: false, message: "Vehicle not found" });
         }
 
-        )
-        await Employee.findByIdAndUpdate(logistic._id,{unseenNotifications});
-        res.status(200).send(
-            {
-                success:true,
-                 message: "Booking submission successful.",
-            }
-        );
+        // Check if there are enough available seats
+        if (vehicle.availableSeats <= 0) {
+            return res.status(400).json({ success: false, message: "No available seats for this vehicle" });
+        }
 
-        
+        // Decrement availableSeats and save the updated vehicle
+        vehicle.availableSeats -= 1;
+        await vehicle.save();
+
+        // Create new booking
+        const newBooking = new booking({
+            ...req.body,
+            status: "pending"
+        });
+        await newBooking.save();
+
+        // Handle notifications, etc.
+
+        res.status(200).json({ success: true, message: "Your booking has been sent for approval" });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Error Submitting Booking request", success: false, error });
+        console.error("Error in saving booking:", error);
+        res.status(500).json({ success: false, message: "Failed to save booking" });
     }
 });
 
@@ -964,27 +966,19 @@ router.get('/getTraBooking', async (req, res) => {
 
 // read User
 
-router.get('/getTraBooking3/:userid', async (req, res) => {
+// GET TraBooking based on user id
+router.get("/getTraBooking3/:id", async (req, res) => {
     try {
-        const { userid } = req.params;
-        const user = await Employee.findOne({ _id: userid });
+        const userId = req.params.id;
+        const bookings = await booking.find({ userid: userId });
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found.", success: false });
-        }
-
-        const bookings = await booking.find({ userid });
-
-        if (!bookings || bookings.length === 0) {
-            return res.status(404).json({ message: "No Booking requests found for this user.", success: false });
-        }
-
-        res.status(200).json({ bookings, success: true });
+        res.status(200).json({ success: true, bookings });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Failed to retrieve Booking information.", success: false, error });
+        console.error("Error in fetching booking:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch booking" });
     }
 });
+
 
 // read update part
 router.get('/getTraBooking2/:id', async (req, res) => {
@@ -1070,20 +1064,26 @@ const unseenNotifications = user.unseenNotifications
 
 
 // DELETE Booking
-router.delete('/deletebooking/:id', async (req, res) => {
-    console.log("delete roue")
-    console.log(req.params.id)
+router.delete("/deleteTraBooking/:id", async (req, res) => {
     try {
-        const bookings = await booking.findByIdAndDelete(req.params.id);
-        if (!bookings) {
-            return res.status(404).send({ message: "Booking not found.", success: false });
+        const bookingId = req.params.id;
+        const deletedBooking = await booking.findByIdAndDelete(bookingId);
+        if (!deletedBooking) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
         }
-        res.status(200).send({ message: "Booking deleted successfully", success: true });
+
+        // Increment availableSeats and save the updated vehicle
+        const vehicle = await Vregister.findById(deletedBooking.vehicleId);
+        vehicle.availableSeats += 1;
+        await vehicle.save();
+
+        res.status(200).json({ success: true, message: "Booking deleted successfully" });
     } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
+        console.error("Error in deleting booking:", error);
+        res.status(500).json({ success: false, message: "Failed to delete booking" });
     }
 });
+
 
 
 
@@ -1173,17 +1173,31 @@ router.delete('/deletedrivers/:id', async (req, res) => {
 
 
 // vehicle Register
-router.post('/Vehicleregister', async (req, res) => {
+// POST a new Vehicle registration
+router.post("/Vehicleregister", authMiddleware, async (req, res) => {
     try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
+        const { Type } = req.body;
+        let numSeats;
+
+        if (Type === 'bus') {
+            numSeats = 50;
+        } else if (Type === 'van') {
+            numSeats = 12;
+        }
+
+        const newVehicle = new Vehicle({
+            ...req.body,
+            numSeats
+        });
+        await newVehicle.save();
+
+        res.status(200).json({ success: true, message: "Vehicle registration successful" });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
+        console.error("Error in registering vehicle:", error);
+        res.status(500).json({ success: false, message: "Failed to register vehicle" });
     }
 });
+
 
 // read Vehicle register
 router.get('/getVehicles', async (req, res) => {
