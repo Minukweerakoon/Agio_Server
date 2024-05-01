@@ -782,6 +782,8 @@ router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
     const { eventId } = req.params;
     const { choice, empId } = req.body;
 
+    console.log(eventId)
+
     if (!choice) {
         return res.status(400).json({ success: false, message: 'RSVP choice is required' });
     }
