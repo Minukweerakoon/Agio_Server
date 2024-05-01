@@ -757,46 +757,27 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
-<<<<<<< HEAD
-router.delete('/siyathugoiya/:id', async (req, res) => {
-=======
+// router.delete('/siyathugoiya/:id', async (req, res) => {
+//     try {
+//         const updatedEvent = await Notice.findByIdAndUpdate(id, {
+//             title,
+//             description,
+//             submission,
+//             expiryDate
+//         }, { new: true });
 
+//         if (!updatedEvent) {
+//             return res.status(404).send({ message: "Event not found.", success: false });
+//         }
 
-router.put('/updatevent/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updatedEvent = await Notice.findByIdAndUpdate(id, req.body, { new: true });
-        if(!updatedEvent) {
-            return res.status(404).json({ success: false, message: "Notice not found." });
-        }
-        res.json({ success: true, message: "Notice updated successfully.", Notice: updatedEvent });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error." });
-    }
-});
-
-router.delete('/deletebooking/:id', async (req, res) => {
->>>>>>> cd6790b13f2280a37eaa4f069a05159e8cc43da6
-    try {
-        const updatedEvent = await Notice.findByIdAndUpdate(id, {
-            title,
-            description,
-            submission,
-            expiryDate
-        }, { new: true });
-
-        if (!updatedEvent) {
-            return res.status(404).send({ message: "Event not found.", success: false });
-        }
-
-        res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
-    } catch (error) {
-        console.error('Failed to update the event:', error);
-        res.status(500).send({ message: "Failed to update event.", success: false, error });
-    }
-});
+//         res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+//     } catch (error) {
+//         console.error('Failed to update the event:', error);
+//         res.status(500).send({ message: "Failed to update event.", success: false, error });
+//     }
+// });
 // Assuming express is already set up with router
+
 router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
     const { eventId } = req.params;
     const { choice, empId } = req.body;
@@ -1156,14 +1137,6 @@ router.delete('/deletebooking/:id', async (req, res) => {
 
 
 
-
- 
-
-
-
-
-
-
 // Driver Register
 router.post('/Driveregister', async (req, res) => {
     try {
@@ -1315,10 +1288,10 @@ router.put('/updatevehicles/:id', async (req, res) => {
      }
  });
 
-
+// Payment booking slip upload
  router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
 
-// Payment booking slip upload
+
 router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
     try {
         const { id } = req.params;
