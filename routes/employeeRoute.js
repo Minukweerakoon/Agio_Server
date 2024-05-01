@@ -1890,16 +1890,29 @@ router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
 });
 
 //attendance
+
+
 router.post("/uploadexcelattendance", upload.single("csvFile"), async (req, res) => {
-    
     try {
         const jsonArray = await csvtojson().fromFile(req.file.path);
-        await attendanceModel.create(jsonArray);
-        return res.json("Data added successfully");
+
+        // Loop through each attendance record from the CSV file
+        for (const attendance of jsonArray) {
+            // Add a prefix or suffix to empid to differentiate between files
+            attendance.empid = `${req.file.originalname}_${attendance.empid}`;
+
+            // Insert the attendance record into the database
+            await attendanceModel.create(attendance);
+        }
+
+        return res.json({ message: "Data added successfully" });
     } catch (error) {
-        return res.status(500).json(error);
+        console.error('Error uploading attendance data:', error);
+        return res.status(500).json({ error: 'Failed to upload attendance data. Please try again later.' });
     }
 });
+
+
 
 //read attendance
 router.get('/attendance', async (req, res) => {
@@ -1907,6 +1920,7 @@ router.get('/attendance', async (req, res) => {
         const attendanceData = await attendanceModel.find({ attendance: false }, { empid: 1, username_log: 1, createdAt: 1 });
         return res.json(attendanceData);
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });

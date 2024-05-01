@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const userSchema = new mongoose.Schema({
     username_log: {
         type: String,
@@ -8,24 +7,16 @@ const userSchema = new mongoose.Schema({
     },
     empid: {
         type: String,
-
-        unique: true
-        
+        required: true
+        // Remove unique constraint from empid field
     },
-attendance: {
+    attendance: {
         type: Boolean,
-
-        required: true,
-        
-    },
-   
-    
-   
+        required: true
+    }
 }, {
     timestamps: true
 });
 
-
-
 const attendanceModel = mongoose.model("Attendance", userSchema);
-module.exports =attendanceModel;
+module.exports = attendanceModel;
