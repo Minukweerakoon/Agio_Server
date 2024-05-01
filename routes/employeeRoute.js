@@ -757,7 +757,27 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
+<<<<<<< HEAD
 router.delete('/siyathugoiya/:id', async (req, res) => {
+=======
+
+
+router.put('/updatevent/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedEvent = await Notice.findByIdAndUpdate(id, req.body, { new: true });
+        if(!updatedEvent) {
+            return res.status(404).json({ success: false, message: "Notice not found." });
+        }
+        res.json({ success: true, message: "Notice updated successfully.", Notice: updatedEvent });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+router.delete('/deletebooking/:id', async (req, res) => {
+>>>>>>> cd6790b13f2280a37eaa4f069a05159e8cc43da6
     try {
         const updatedEvent = await Notice.findByIdAndUpdate(id, {
             title,
@@ -776,6 +796,43 @@ router.delete('/siyathugoiya/:id', async (req, res) => {
         res.status(500).send({ message: "Failed to update event.", success: false, error });
     }
 });
+// Assuming express is already set up with router
+router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
+    const { eventId } = req.params;
+    const { choice, empId } = req.body;
+
+    if (!choice) {
+        return res.status(400).json({ success: false, message: 'RSVP choice is required' });
+    }
+
+    try {
+        const event = await Notice.findById(eventId); // Make sure to replace `Event` with your actual model
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+
+        if (!event.response) {
+            event.response = [];
+        }
+
+        const newResponse = {
+            choice,
+            empId,
+            createdAt: new Date(),
+        };
+
+        event.response.push(newResponse);
+        await event.save();
+        
+        res.status(201).json({ success: true, message: 'RSVP submitted successfully', response: newResponse });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+
+
 
 
 ////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
