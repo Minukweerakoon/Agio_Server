@@ -822,53 +822,6 @@ router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
-router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
-    const { announcementId } = req.params;
-    const { text, empId } = req.body;
-
-    console.log(empId);
-    console.log(req.body);
-
-    if (!text) {
-        return res.status(400).json({ success: false, message: 'Comment text is required' });
-    }
-
-    try {
-        // Find the announcement by ID
-        const announcement = await Announcement.findById(announcementId);
-
-        if (!announcement) {
-            // If the announcement doesn't exist, return an error immediately.
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
-        }
-
-        // Ensure the announcement has an initialized comments array
-        if (!announcement.comment) {
-            announcement.comment = [];
-        }
-
-        // Add the comment to the announcement's comments array
-        const newComment = {
-            text,
-            empId, // employee ID from the request
-            createdAt: new Date(),
-        };
-
-        console.log(newComment);
-
-        announcement.comment.push(newComment);
-
-        // Save the updated announcement
-        await announcement.save();
-        
-        // Return the latest comment added along with a success message
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: newComment });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-});
-
 
 
 
