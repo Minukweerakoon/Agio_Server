@@ -753,6 +753,22 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
+
+
+router.put('/updatevent/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedEvent = await Notice.findByIdAndUpdate(id, req.body, { new: true });
+        if(!updatedEvent) {
+            return res.status(404).json({ success: false, message: "Notice not found." });
+        }
+        res.json({ success: true, message: "Notice updated successfully.", Notice: updatedEvent });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 router.delete('/deletebooking/:id', async (req, res) => {
     try {
         const updatedEvent = await Notice.findByIdAndUpdate(id, {
