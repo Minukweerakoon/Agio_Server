@@ -26,7 +26,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     
-      }
+      },
+      response: [{
+        type: String, 
+        enum: ['in', 'out'], 
+        empId :String,
+        createdAt: Date
+      }],
 })
 const AnnCalFormModel = mongoose.model("Notice", userSchema);
 
