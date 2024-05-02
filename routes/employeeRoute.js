@@ -2133,6 +2133,61 @@ router.get('/attendance', async (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+// POST request to add a suggested date to an existing leave request
+router.post('/:id/suggest-date', async (req, res) => {
+    try {
+        const leaveId = req.params.id; // Extract the leave ID from the request parameters
+        const { suggestedDate } = req.body; // Extract the suggested date from the request body
+
+        // Find the leave request by its ID
+        const leaveRequest = await Leave.findById(leaveId);
+
+        if (!leaveRequest) {
+            return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Update the suggested date field
+        leaveRequest.suggestedDate = suggestedDate;
+
+        // Save the updated leave request to the database
+        const updatedLeaveRequest = await leaveRequest.save();
+
+        // Respond with the updated leave request
+        res.status(200).json(updatedLeaveRequest);
+    } catch (error) {
+        // If an error occurs, respond with an error message
+        console.error("Error adding suggested date to leave request:", error);
+        res.status(500).json({ message: "Failed to add suggested date to leave request" });
+    }
+});
+
+router.put('/:id/suggest-date', async (req, res) => {
+    try {
+        const leaveId = req.params.id; // Extract the leave ID from the request parameters
+        const { suggestedDate } = req.body; // Extract the suggested date from the request body
+
+        // Find the leave request by its ID
+        const leaveRequest = await Leave.findById(leaveId);
+
+        if (!leaveRequest) {
+            return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Update the suggested date field
+        leaveRequest.suggestedDate = suggestedDate;
+
+        // Save the updated leave request to the database
+        const updatedLeaveRequest = await leaveRequest.save();
+
+        // Respond with the updated leave request
+        res.status(200).json(updatedLeaveRequest);
+    } catch (error) {
+        // If an error occurs, respond with an error message
+        console.error("Error updating suggested date of leave request:", error);
+        res.status(500).json({ message: "Failed to update suggested date of leave request" });
+    }
+});
+
 
 
 
