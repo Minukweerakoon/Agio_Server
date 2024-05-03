@@ -8,6 +8,7 @@ const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const payment = require('../models/TraPymentModel');
 const Inquiry = require('../models/inquiryModel');
+const Attendance = require('../models/AttendanceModel');
 const attendanceModel = require('../models/AttendanceModel');
 const csvtojson = require('csvtojson');
 
@@ -780,7 +781,7 @@ router.delete('/deletevent/:id', async (req, res) => {
 
 router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
     const { eventId } = req.params;
-    const { choice, empId } = req.body;
+    const { choice, empId,department } = req.body;
 
     console.log(eventId)
 
@@ -801,6 +802,7 @@ router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
         const newResponse = {
             choice,
             empId,
+            department,
             createdAt: new Date(),
         };
 
@@ -813,6 +815,34 @@ router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+router.get('/:noticeId/choiceCount', async (req, res) => {
+    const { noticeId } = req.params;
+
+    try {
+        // Find the notice by ID
+        const notice = await Notice.findById(noticeId);
+
+        if (!notice) {
+            return res.status(404).json({ message: 'Notice not found' });
+        }
+
+        // Count occurrences of the word "in" in response choices
+        const choiceCount = notice.response.reduce((count, response) => {
+            // Check if the choice includes the word "in"
+            if (response.choice.includes('in')) {
+                return count + 1;
+            }
+            return count;
+        }, 0);
+
+        res.json({ count: choiceCount });
+    } catch (error) {
+        console.error('Error fetching notice:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
 
 
 
@@ -2107,13 +2137,15 @@ router.post("/uploadexcelattendance", upload.single("csvFile"), async (req, res)
 
         // Loop through each attendance record from the CSV file
         for (const attendance of jsonArray) {
-            // Add a prefix or suffix to empid to differentiate between files
-            attendance.empid = `${req.file.originalname}_${attendance.empid}`;
-
+            // Generate a unique identifier for each attendance record
+            const uniqueEmpId = `${attendance.empid}_${Date.now()}`;
+        
+            // Set the new unique identifier
+            attendance.empid = uniqueEmpId;
+        
             // Insert the attendance record into the database
             await attendanceModel.create(attendance);
         }
-
         return res.json({ message: "Data added successfully" });
     } catch (error) {
         console.error('Error uploading attendance data:', error);
@@ -2126,11 +2158,15 @@ router.post("/uploadexcelattendance", upload.single("csvFile"), async (req, res)
 //read attendance
 router.get('/attendance', async (req, res) => {
     try {
-        const attendanceData = await attendanceModel.find({ attendance: false }, { empid: 1, username_log: 1, createdAt: 1 });
-        return res.json(attendanceData);
+        const { date } = req.query;
+        
+        // Find attendance records for the specified date
+        const attendanceData = await Attendance.find({ createdAt: { $gte: new Date(date), $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) } });
+        
+        res.json({ attendance: attendanceData });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance data' });
     }
 });
 // POST request to add a suggested date to an existing leave request

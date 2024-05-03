@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
       response: [{
         choice: String,
         empId: String,
+        department:String,
         createdAt: Date
     }]
 })
