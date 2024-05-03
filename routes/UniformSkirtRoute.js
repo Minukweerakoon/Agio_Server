@@ -7,13 +7,13 @@ router.post('/', async (req, res) => {
   try {
     const { waistSize, quantity } = req.body;
     
-    // Create a new skirt object
+    
     const newSkirt = new UniformSkirt({
       waistSize,
       quantity,
     });
 
-    // Save the new skirt to the database
+    
     await newSkirt.save();
 
     res.status(201).json({ message: 'Skirt inventory updated successfully' });
