@@ -966,21 +966,36 @@ router.put('/inquiry/:id/reply', async (req, res) => {
 
 ////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
 
 
-// Backend code
-// Import necessary dependencies and models
+/* Function to delete bookings from the previous day*/
+const deletePreviousDayBookings = async () => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1); // Get date of yesterday
 
-// POST a new Booking
-/////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
+    try {
+        await booking.deleteMany({ bookingdate: { $lt: yesterday } });
+        console.log('Previous day bookings deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting previous day bookings:', error);
+    }
+};
+
+// Run deletePreviousDayBookings function at midnight every day
+const scheduleDeletePreviousDayBookings = () => {
+    // Set interval to run at midnight (00:00:00)
+    const interval = setInterval(async () => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+            await deletePreviousDayBookings();
+        }
+    }, 1000); // Check every second
+};
+
+// Call scheduleDeletePreviousDayBookings function when server starts
+scheduleDeletePreviousDayBookings();
 
 
 // POST a new Booking
@@ -1168,7 +1183,6 @@ router.delete('/deletebooking/:id', async (req, res) => {
 });
 
 
-
 // Driver Register
 router.post('/Driveregister', async (req, res) => {
     try {
@@ -1246,19 +1260,24 @@ router.delete('/deletedrivers/:id', async (req, res) => {
 
 
 
-
 // vehicle Register
 router.post('/Vehicleregister', async (req, res) => {
     try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
+        let numSeats;
+        if (req.body.Type === 'bus') {
+            numSeats = 50;
+        } else if (req.body.Type === 'van') {
+            numSeats = 24;
+        }
+        const vehicleRegister = new Vregister({...req.body, numSeats});
+        await vehicleRegister.save();
+        res.status(200).send({ message: "Vehicle Registered Successfully", success: true });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
+        console.error(error);
+        res.status(500).send({ message: "Vehicle Registration Unsuccessful.", success: false, error });
     }
 });
+
 
 // read Vehicle register
 router.get('/getVehicles', async (req, res) => {
@@ -1338,190 +1357,6 @@ router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
         res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
     }
 });
-
-module.exports = router;
-
-
-
-
-
-
-
-// Driver Register
-router.post('/Driveregister', async (req, res) => {
-    try {
-        
-        const Dregisters = new Dregister (req.body);
-        await Dregisters.save();
-        res.status(200).send({ message: "Driver Register Successfully", success: true });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Driver Register unsuccessful.", success: false, error });
-    }
-});
-
-// read driver register
-router.get('/getdrivers', async (req, res) => {
-    try {
-        const drivers = await Dregister.find(); 
-        if (!drivers || drivers.length === 0) {
-            return res.status(404).send({ message: "No Driver found.", success: false });
-        }
-        res.status(200).send({ drivers, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve Driver.", success: false, error });
-    }
-});
-
-//read
-router.get('/getdrivers2/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-       const Dregisters = await Dregister.findById(id);
-        if (!Dregisters) {
-            return res.status(404).send({ message: "Driver not found.", success: false });
-        }
-        res.status(200).send({Dregisters, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve the Driver.", success: false, error });
-    }
-});
-
-// Update Driver
-
-router.put('/updatedrivers/:id', async (req, res) => {
-   try {
-     const { id } = req.params;
-     const updatedDrivers = await Dregister.findByIdAndUpdate(id, req.body, { new: true });
-     if (!updatedDrivers) {
-       return res.status(404).json({ success: false, message: "Driver not found." });
-     }
-     res.status(200).json({ success: true, message: "Driver updated successfully.", Dregisters: updatedDrivers });
-   } catch (error) {
-     console.error(error);
-     res.status(500).json({ success: false, message: "Internal server error." });
-   }
- });
-
-// DELETE Driver
-router.delete('/deletedrivers/:id', async (req, res) => {
-    try {
-        const Dregisters = await Dregister.findByIdAndDelete(req.params.id);
-         if (!Dregisters) {
-             return res.status(404).send({ message: "Driver not found.", success: false });
-         }
-         res.status(200).send({ message: "Driver deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
-     }
- });
-
- 
-
-
-
-
-
-// vehicle Register
-router.post('/Vehicleregister', async (req, res) => {
-    try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
-    }
-});
-
-// read Vehicle register
-router.get('/getVehicles', async (req, res) => {
-    try {
-        const vehicles = await Vregister.find(); 
-        if (!vehicles || vehicles.length === 0) {
-            return res.status(404).send({ message: "No Booking found.", success: false });
-        }
-        res.status(200).send({ vehicles, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve Vehicle.", success: false, error });
-    }
-});
-
- //read
- router.get('/getVehicles2/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-       const VehicleRegister = await Vregister.findById(id);
-        if (!VehicleRegister) {
-            return res.status(404).send({ message: "Vehicle not found.", success: false });
-        }
-        res.status(200).send({VehicleRegister, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve the Vehicle.", success: false, error });
-    }
-});
-
-// Update Vehicle
-
-router.put('/updatevehicles/:id', async (req, res) => {
-   try {
-     const { id } = req.params;
-     const updatedvehicles = await Vregister.findByIdAndUpdate(id, req.body, { new: true });
-     if (!updatedvehicles) {
-       return res.status(404).json({ success: false, message: "Vehicle not found." });
-     }
-     res.status(200).json({ success: true, message: "Vehicle updated successfully.", VehicleRegister: updatedvehicles });
-   } catch (error) {
-     console.error(error);
-     res.status(500).json({ success: false, message: "Internal server error." });
-   }
- });
-
-
- // DELETE Vehicle
- router.delete('/deletevehicles/:id', async (req, res) => {
-    try {
-        const VehicleRegister = await Vregister.findByIdAndDelete(req.params.id);
-         if (!VehicleRegister) {
-             return res.status(404).send({ message: "Vehicle not found.", success: false });
-         }
-         res.status(200).send({ message: "Vehicle deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
-     }
- });
-
-
- router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
-
-// Payment booking slip upload
-router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const file = req.file.filename; 
-
-        const pay = new payment({ file }); 
-        await pay.save();
-        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
-    }
-});
-
-module.exports = router;
-
-
-
-
 
 
 
