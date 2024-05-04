@@ -22,6 +22,7 @@ app.use(cors())
 
 const UniformOrderRoute = require("./routes/UniformOrderRoute");
 const UniformShirtRoute = require('./routes/UniformShirtRoute'); 
+
 const uniformSkirtRoute = require('./routes/UniformSkirtRoute');
 const UniformTotalsRoute = require("./routes/UniformTotalsRoute");
 
@@ -38,8 +39,6 @@ app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/uniform-orders', uniformOrderRoute);
-
-
 app.use('/api/UniformOrder', UniformOrderRoute);
 app.use('/api/UniformShirt', UniformShirtRoute);
 app.use('/api/UniformSkirt', uniformSkirtRoute);
