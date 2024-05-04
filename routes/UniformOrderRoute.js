@@ -63,4 +63,23 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Route to fetch total number of shirts ordered by Factory Workers
+router.get('/shirtTotals', async (req, res) => {
+  try {
+    const shirtTotals = await UniformOrderModel.aggregate([
+      { $match: { position: 'Factory Worker', tshirtSize: { $exists: true } } },
+      {
+        $group: {
+          _id: '$tshirtSize',
+          totalShirts: { $sum: '$uniformCount' }
+        }
+      }
+    ]);
+    res.json(shirtTotals);
+  } catch (error) {
+    console.error('Error fetching shirt totals:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 module.exports = router;
