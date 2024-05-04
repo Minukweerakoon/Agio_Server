@@ -2169,6 +2169,40 @@ router.get('/attendance', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch attendance data' });
     }
 });
+router.get('/attendance_leave', async (req, res) => {
+    try {
+        const date = req.query.date; // Date parameter from the query string
+        console.log(date);
+        
+        // Convert the date string to a Date object
+        const startDate = new Date(date);
+
+        // Extract the date portion without the time
+        const startDateWithoutTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+
+        // Find leaves with the specified start date
+        const leaves = await Leave.find({ startDate: startDateWithoutTime });
+        console.log(leaves)
+
+        // Extract employee IDs from leaves
+        const leaveIds = leaves.map(leave => leave.userid);
+        console.log(leaveIds)
+
+        // Find employees with leave IDs
+        const employees = await Employee.find({ _id: { $in: leaveIds } });
+        console.log(employees)
+
+        // Extract employee IDs
+        const employeeIds = employees.map(employee => employee.empid);
+        console.log(employeeIds);
+
+        res.json({ leaves, employeeIds });
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance data' });
+    }
+});
+
 // POST request to add a suggested date to an existing leave request
 router.post('/:id/suggest-date', async (req, res) => {
     try {
