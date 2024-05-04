@@ -969,68 +969,40 @@ router.put('/inquiry/:id/reply', async (req, res) => {
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
 
 
-/* Function to delete bookings from the previous day*/
-const deletePreviousDayBookings = async () => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1); // Get date of yesterday
 
-    try {
-        await booking.deleteMany({ bookingdate: { $lt: yesterday } });
-        console.log('Previous day bookings deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting previous day bookings:', error);
-    }
-};
-
-// Run deletePreviousDayBookings function at midnight every day
-const scheduleDeletePreviousDayBookings = () => {
-    // Set interval to run at midnight (00:00:00)
-    const interval = setInterval(async () => {
-        const now = new Date();
-        if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-            await deletePreviousDayBookings();
-        }
-    }, 1000); // Check every second
-};
-
-// Call scheduleDeletePreviousDayBookings function when server starts
-scheduleDeletePreviousDayBookings();
 
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
-        const Booking = new booking({...req.body ,status :"pending"})
+        const { Type } = req.body;
+        const Booking = new booking({ ...req.body, status: "pending" });
         await Booking.save();
-        const logistic = await Employee.findOne({islogisticsMan:true})
-        const unseenNotifications = logistic.unseenNotifications
-        unseenNotifications.push({
-            type:"New Booking request",
-            message :`${ Booking.EmpName} has submitted a Booking request`,
-            data:{
-                bookingid:Booking._id,
-                name: Booking.EmpName,
-            },
-            onclickpath:"/"
 
-        }
+        // Update seat count based on the vehicle type
+        const vehicleType = Type.toLowerCase();
+        const totalSeats = { bus: 100, van: 24 }; // Assuming lowercase vehicle types
+        const updatedRemainingSeats = { ...totalSeats };
 
-        )
-        await Employee.findByIdAndUpdate(logistic._id,{unseenNotifications});
-        res.status(200).send(
-            {
-                success:true,
-                 message: "Booking submission successful.",
-            }
-        );
+        // Update remaining seats count
+        const vehicles = await VehicleRegister.find({ type: vehicleType });
+        const numOfVehicles = vehicles.length;
+        updatedRemainingSeats[vehicleType] = totalSeats[vehicleType] * numOfVehicles;
 
-        
+        // Send updated seat count in response
+        res.status(200).send({
+            success: true,
+            message: "Booking submission successful.",
+            remainingSeats: updatedRemainingSeats,
+        });
+
+        // Your remaining logic for notifications goes here...
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Error Submitting Booking request", success: false, error });
     }
 });
+
 
 
 // read Admin
@@ -1265,7 +1237,7 @@ router.post('/Vehicleregister', async (req, res) => {
     try {
         let numSeats;
         if (req.body.Type === 'bus') {
-            numSeats = 50;
+            numSeats = 100 * req.body.numBuses; // Calculate total seats for multiple buses
         } else if (req.body.Type === 'van') {
             numSeats = 24;
         }
