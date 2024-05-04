@@ -966,56 +966,43 @@ router.put('/inquiry/:id/reply', async (req, res) => {
 
 ////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
 
 
-// Backend code
-// Import necessary dependencies and models
 
-// POST a new Booking
-/////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
 
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
-        const Booking = new booking({...req.body ,status :"pending"})
+        const { Type } = req.body;
+        const Booking = new booking({ ...req.body, status: "pending" });
         await Booking.save();
-        const logistic = await Employee.findOne({islogisticsMan:true})
-        const unseenNotifications = logistic.unseenNotifications
-        unseenNotifications.push({
-            type:"New Booking request",
-            message :`${ Booking.EmpName} has submitted a Booking request`,
-            data:{
-                bookingid:Booking._id,
-                name: Booking.EmpName,
-            },
-            onclickpath:"/"
 
-        }
+        // Update seat count based on the vehicle type
+        const vehicleType = Type.toLowerCase();
+        const totalSeats = { bus: 100, van: 24 }; // Assuming lowercase vehicle types
+        const updatedRemainingSeats = { ...totalSeats };
 
-        )
-        await Employee.findByIdAndUpdate(logistic._id,{unseenNotifications});
-        res.status(200).send(
-            {
-                success:true,
-                 message: "Booking submission successful.",
-            }
-        );
+        // Update remaining seats count
+        const vehicles = await VehicleRegister.find({ type: vehicleType });
+        const numOfVehicles = vehicles.length;
+        updatedRemainingSeats[vehicleType] = totalSeats[vehicleType] * numOfVehicles;
 
-        
+        // Send updated seat count in response
+        res.status(200).send({
+            success: true,
+            message: "Booking submission successful.",
+            remainingSeats: updatedRemainingSeats,
+        });
+
+        // Your remaining logic for notifications goes here...
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Error Submitting Booking request", success: false, error });
     }
 });
+
 
 
 // read Admin
@@ -1168,7 +1155,6 @@ router.delete('/deletebooking/:id', async (req, res) => {
 });
 
 
-
 // Driver Register
 router.post('/Driveregister', async (req, res) => {
     try {
@@ -1246,19 +1232,24 @@ router.delete('/deletedrivers/:id', async (req, res) => {
 
 
 
-
 // vehicle Register
 router.post('/Vehicleregister', async (req, res) => {
     try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
+        let numSeats;
+        if (req.body.Type === 'bus') {
+            numSeats = 100 * req.body.numBuses; // Calculate total seats for multiple buses
+        } else if (req.body.Type === 'van') {
+            numSeats = 24;
+        }
+        const vehicleRegister = new Vregister({...req.body, numSeats});
+        await vehicleRegister.save();
+        res.status(200).send({ message: "Vehicle Registered Successfully", success: true });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
+        console.error(error);
+        res.status(500).send({ message: "Vehicle Registration Unsuccessful.", success: false, error });
     }
 });
+
 
 // read Vehicle register
 router.get('/getVehicles', async (req, res) => {
@@ -1338,190 +1329,6 @@ router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
         res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
     }
 });
-
-module.exports = router;
-
-
-
-
-
-
-
-// Driver Register
-router.post('/Driveregister', async (req, res) => {
-    try {
-        
-        const Dregisters = new Dregister (req.body);
-        await Dregisters.save();
-        res.status(200).send({ message: "Driver Register Successfully", success: true });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Driver Register unsuccessful.", success: false, error });
-    }
-});
-
-// read driver register
-router.get('/getdrivers', async (req, res) => {
-    try {
-        const drivers = await Dregister.find(); 
-        if (!drivers || drivers.length === 0) {
-            return res.status(404).send({ message: "No Driver found.", success: false });
-        }
-        res.status(200).send({ drivers, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve Driver.", success: false, error });
-    }
-});
-
-//read
-router.get('/getdrivers2/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-       const Dregisters = await Dregister.findById(id);
-        if (!Dregisters) {
-            return res.status(404).send({ message: "Driver not found.", success: false });
-        }
-        res.status(200).send({Dregisters, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve the Driver.", success: false, error });
-    }
-});
-
-// Update Driver
-
-router.put('/updatedrivers/:id', async (req, res) => {
-   try {
-     const { id } = req.params;
-     const updatedDrivers = await Dregister.findByIdAndUpdate(id, req.body, { new: true });
-     if (!updatedDrivers) {
-       return res.status(404).json({ success: false, message: "Driver not found." });
-     }
-     res.status(200).json({ success: true, message: "Driver updated successfully.", Dregisters: updatedDrivers });
-   } catch (error) {
-     console.error(error);
-     res.status(500).json({ success: false, message: "Internal server error." });
-   }
- });
-
-// DELETE Driver
-router.delete('/deletedrivers/:id', async (req, res) => {
-    try {
-        const Dregisters = await Dregister.findByIdAndDelete(req.params.id);
-         if (!Dregisters) {
-             return res.status(404).send({ message: "Driver not found.", success: false });
-         }
-         res.status(200).send({ message: "Driver deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Driver.", success: false, error });
-     }
- });
-
- 
-
-
-
-
-
-// vehicle Register
-router.post('/Vehicleregister', async (req, res) => {
-    try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
-    }
-});
-
-// read Vehicle register
-router.get('/getVehicles', async (req, res) => {
-    try {
-        const vehicles = await Vregister.find(); 
-        if (!vehicles || vehicles.length === 0) {
-            return res.status(404).send({ message: "No Booking found.", success: false });
-        }
-        res.status(200).send({ vehicles, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve Vehicle.", success: false, error });
-    }
-});
-
- //read
- router.get('/getVehicles2/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-       const VehicleRegister = await Vregister.findById(id);
-        if (!VehicleRegister) {
-            return res.status(404).send({ message: "Vehicle not found.", success: false });
-        }
-        res.status(200).send({VehicleRegister, success: true });
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ message: "Failed to retrieve the Vehicle.", success: false, error });
-    }
-});
-
-// Update Vehicle
-
-router.put('/updatevehicles/:id', async (req, res) => {
-   try {
-     const { id } = req.params;
-     const updatedvehicles = await Vregister.findByIdAndUpdate(id, req.body, { new: true });
-     if (!updatedvehicles) {
-       return res.status(404).json({ success: false, message: "Vehicle not found." });
-     }
-     res.status(200).json({ success: true, message: "Vehicle updated successfully.", VehicleRegister: updatedvehicles });
-   } catch (error) {
-     console.error(error);
-     res.status(500).json({ success: false, message: "Internal server error." });
-   }
- });
-
-
- // DELETE Vehicle
- router.delete('/deletevehicles/:id', async (req, res) => {
-    try {
-        const VehicleRegister = await Vregister.findByIdAndDelete(req.params.id);
-         if (!VehicleRegister) {
-             return res.status(404).send({ message: "Vehicle not found.", success: false });
-         }
-         res.status(200).send({ message: "Vehicle deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Vehicle.", success: false, error });
-     }
- });
-
-
- router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
-
-// Payment booking slip upload
-router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const file = req.file.filename; 
-
-        const pay = new payment({ file }); 
-        await pay.save();
-        res.status(200).send({ message: "Payment Slip Upload successful.", success: true, userId: id });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
-    }
-});
-
-module.exports = router;
-
-
-
-
 
 
 
