@@ -533,6 +533,27 @@ router.post('/AnnHRsup2', authMiddleware2, upload.single('video'), async (req, r
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
+router.get('/AnnHRsupReport/month', async (req, res) => {
+    try {
+        const { month } = req.query; // Expected format 'YYYY-MM'
+        const startDate = new Date(month + '-01'); // Start of the month
+        const endDate = new Date(month + '-01');
+        endDate.setMonth(endDate.getMonth() + 1); // One month after the start date
+
+        const announcements = await Announcement.find({
+            uploaddate: {
+                $gte: startDate,
+                $lt: endDate
+            }
+        });
+        res.status(200).json(announcements);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error fetching announcements for the month.", error });
+    }
+});
+
+
 
 router.get('/getAnnHRsup', async (req, res) => {
     try {
