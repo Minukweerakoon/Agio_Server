@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     required:false,
 },
 video: {
-  type: String, // Assuming you'll store the file path or name
+  type: Object, // Assuming you'll store the file path or name
   required: false,
 },
 

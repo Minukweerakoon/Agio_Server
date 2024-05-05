@@ -462,26 +462,24 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 //announcments
-router.post('/AnnHRsup2', authMiddleware2, upload.fields([{ name: 'file', maxCount: 1 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
+router.post('/AnnHRsup2', authMiddleware2, upload.single('video'), async (req, res) => {
     try {
-      // Check if 'file' or 'video' keys exist in req.files
-      if (!req.files || (!req.files['file'] && !req.files['video'])) {
-        throw new Error('Either file or video is required');
+      // Check if 'video' key exists in req.file
+      if (!req.file) {
+        throw new Error('Video is required');
       }
-    
-      // Extract file and video from request
-      const file = req.files['file'] ? req.files['file'][0] : null;
-      const video = req.files['video'] ? req.files['video'][0] : null;
-  
-      // Create a new announcement with the request body and file information
+
+      // Extract video from request
+      const video = req.file;
+      
+      // Create a new announcement with the request body and video information
       const announcement = new Announcement({
         ...req.body,
-        file: file ? file.filename : null,
         video: video ? video.filename : null
       });
-  
+    
       await announcement.save();
-  
+    
       // Create the notification object
       const notification = {
         type: "New announcement update",
@@ -492,16 +490,18 @@ router.post('/AnnHRsup2', authMiddleware2, upload.fields([{ name: 'file', maxCou
         },
         onclickpath: "/" // Update this path as necessary
       };
-  
+    
       // Update all employees with the new notification
       await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
-  
+    
       res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true, announcement });
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
   });
+
+  
   router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
         const file = req.file
