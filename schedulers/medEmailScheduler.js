@@ -86,11 +86,12 @@ emitter.on('medEmailScheduler', () => {
  * 
  */
 // Run the scheduler at 00:10 on the 1st day of every month => '10 0 1 * *'
+// For testing => '* * * * * *'
 const medMonthlyReportGenerateScheduler = schedule.scheduleJob('10 0 1 * *', () => {
     console.log('Med email scheduler ran');
     
     generateReport();
-    
+    //medMonthlyReportGenerateScheduler.cancel();
 })
 
 /*
@@ -99,11 +100,13 @@ const medMonthlyReportGenerateScheduler = schedule.scheduleJob('10 0 1 * *', () 
  Scheduler for sending the mail
  * 
  */
-// Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *'
+// Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *' 
+// For testing => '* * * * * *'
 const medMonthlyReportScheduler = schedule.scheduleJob('30 0 1 * *', () => {
 
     var monthName = new Date(new Date().setDate(new Date().getDate()-1)).toLocaleString('default', { month: 'long' })
     setMailOptions(monthName);
     sendEmail(transporter, mailOptions);
     
+    //medMonthlyReportScheduler.cancel();
 })
