@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware2");
+const authmiddleware3 = require("../middleware/authmiddleware3");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
@@ -19,6 +20,7 @@ const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
+const uploadvideo = require('../middleware/uploadvideo');
 const Notice = require('../models/AnnCalFormModel')
 
 const generateInquiryID = () => {
@@ -89,7 +91,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             // Extract isAdmin value from the employee document
-            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave,warning} = employee;
 
 
 
@@ -115,7 +117,8 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 password : employee.password_log,
                 userid: employee._id,
                 empid :employee.empid,
-                department:employee.department
+                department:employee.department,
+                warning,
 
 
             
@@ -459,7 +462,47 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 //announcments
-router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
+router.post('/AnnHRsup2', authMiddleware2, upload.fields([{ name: 'file', maxCount: 1 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
+    try {
+      // Check if 'file' or 'video' keys exist in req.files
+      if (!req.files || (!req.files['file'] && !req.files['video'])) {
+        throw new Error('Either file or video is required');
+      }
+    
+      // Extract file and video from request
+      const file = req.files['file'] ? req.files['file'][0] : null;
+      const video = req.files['video'] ? req.files['video'][0] : null;
+  
+      // Create a new announcement with the request body and file information
+      const announcement = new Announcement({
+        ...req.body,
+        file: file ? file.filename : null,
+        video: video ? video.filename : null
+      });
+  
+      await announcement.save();
+  
+      // Create the notification object
+      const notification = {
+        type: "New announcement update",
+        message: `New announcement: ${announcement.anntitle}`,
+        data: {
+          announcementId: announcement._id,
+          announcementName: announcement.anntitle
+        },
+        onclickpath: "/" // Update this path as necessary
+      };
+  
+      // Update all employees with the new notification
+      await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
+  
+      res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true, announcement });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+    }
+  });
+  router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
         const file = req.file
         // Create a new announcement with the request body and file information
@@ -490,6 +533,7 @@ router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
+
 router.get('/getAnnHRsup', async (req, res) => {
     try {
         const announcements = await Announcement.find();
@@ -2062,6 +2106,58 @@ router.put('/:id/suggest-date', async (req, res) => {
         // If an error occurs, respond with an error message
         console.error("Error updating suggested date of leave request:", error);
         res.status(500).json({ message: "Failed to update suggested date of leave request" });
+    }
+});
+
+router.post('/addWarning', async (req, res) => {
+    try {
+        const { empid, warning } = req.body;
+
+        // Find the employee by empid
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Add the warning to the employee's warnings array
+        employee.warnings.push(warning);
+
+        // Save the updated employee document
+        await employee.save();
+
+        // Return success response
+        return res.status(200).json({ message: 'Warning added successfully' });
+    } catch (error) {
+        console.error('Error adding warning:', error);
+        // Return error response
+        return res.status(500).json({ error: 'Failed to add warning' });
+    }
+});
+router.get('/getWarnings/:empid', async (req, res) => {
+    try {
+        // Get the employee ID from the route parameters
+        const { empid } = req.params;
+
+        // Find the employee by ID
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee not found' });
+        }
+
+        // If the employee has warnings, return them
+        if (employee.warnings && employee.warnings.length > 0) {
+            return res.status(200).json({ success: true, warnings: employee.warnings });
+        } else {
+            return res.status(200).json({ success: true, warnings: [] }); // No warnings found for the employee
+        }
+    } catch (error) {
+        console.error('Error fetching warnings:', error);
+        // Return error response
+        res.status(500).json({ success: false, error: 'Failed to fetch warnings' });
     }
 });
 
