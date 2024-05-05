@@ -16,9 +16,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
-    "chartjs-node-canvas": "^4.1.6",
     "cors": "^2.8.5",
-    "csvtojson": "^2.0.10",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
@@ -36,8 +34,7 @@
     "nodemailer": "^6.9.13",
     "nodemon": "^3.1.0",
     "pdfkit": "^0.15.0",
-    "react-toastify": "^10.0.5",
     "reselect": "^5.1.0",
-    "uuid": "^9.0.1"
+    "csvtojson": "^2.0.10"
   }
 }

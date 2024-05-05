@@ -776,7 +776,7 @@ router.delete('/deletebooking/:id', async (req, res) => {
 
 ////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
 
-// creating a new inquiry
+//  new inquiry
 router.post('/inquiry', async (req, res) => {
     try {
       const inquiryID = generateInquiryID();
@@ -785,6 +785,7 @@ router.post('/inquiry', async (req, res) => {
         ...req.body
       });
       await inquiry.save();
+  
       res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
     } catch (error) {
       console.error("Error uploading inquiry:", error);
@@ -845,7 +846,7 @@ router.delete('/deleteinquiry/:id', async (req, res) => {
 
 router.get('/all-inquiries', async (req, res) => {
     try {
-      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      const inquiries = await Inquiry.find(); // Fetching the inquiries from here
       res.status(200).json(inquiries);
       console.log(inquiries);
     } catch (error) {
@@ -876,7 +877,7 @@ router.put('/inquiry/:id/reply', async (req, res) => {
       
       const inquiry = await Inquiry.findByIdAndUpdate(
         id,
-        { reply, status: 'Done' }, // Update reply and set status to 'Done'
+        { reply, status: 'Done' }, 
         { new: true }
       );
       
