@@ -124,7 +124,7 @@ const updateAppointmentStatus = async () => {
  */
 // Run the scheduler at 00:10 on every day of every month => '10 0 * * *' 
 // For testing => '* * * * * *'
-const dateControl = schedule.scheduleJob('* * * * * *' , () => {
+const dateControl = schedule.scheduleJob('10 0 * * *' , () => {
 
     getTodaysAvailability();
 
