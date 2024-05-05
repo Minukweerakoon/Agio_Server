@@ -26,9 +26,37 @@ var availableDate = null;
 // Today's scheduled appointment list
 var appointmentList = [];
 
+// Doctor's phone number
+var doctorsNumber;
+
+// Get doctor's phone number
+const getDoctorsNumber = async () => {
+    try {
+        const response = await Employee.findOne(
+          {
+            isDoctor: true,
+          }
+        )
+
+        // Log the response
+        console.log(
+            `@getDoctorsNumber() @medSMSScheduler employees Response => ${response.length} records retrieved`
+        );
+
+        var modifiedPhoneNum = response.phoneNumber;
+        modifiedPhoneNum = modifiedPhoneNum.substring(1, );
+        modifiedPhoneNum = "+94" + modifiedPhoneNum;
+
+        doctorsNumber = modifiedPhoneNum;
+    } catch (error) {
+        console.log(`Error occured when retrieving doctor's phone number @getDoctorsNumber() @medSMSScheduler => `, error)
+    }
+}
+
+// Get today's appointments
 const getTodaysAppointments = async () => {
-  //const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-  const today = new Date(new Date().getFullYear(), new Date().getMonth(), 6);
+    //const today = new Date(new Date().getFullYear(), new Date().getMonth(), 18);
+  const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const todayIso = today.toISOString();
 
   // Check if today is an available date
@@ -148,19 +176,19 @@ const sendEmployeesMessages = async () => {
 }
 
 // send doctor's message
-const sendDoctorsMessage = async () => {
+const sendDoctorsMessage = async (docNumber) => {
     if (availableDate != null) {
         var msgOptions;
         if (availableDate.appointmentCount > 0) {
             msgOptions = {
                 from: twilioPhoneNumber,
-                to: `+94787023826`,
+                to: `${docNumber}`,
                 body: `You have scheduled appointments today!\nDate: ${new Date(availableDate.date).toLocaleDateString()}\nNo of appointments: ${availableDate.appointmentCount}\nStart time: ${availableDate.startTime}\nEnd time: ${availableDate.endTime}`,
             }
         } else {
             msgOptions = {
                 from: twilioPhoneNumber,
-                to: `+94787023826`,
+                to: `${docNumber}`,
                 body: `You don't have any scheduled appointments today!\nDate: ${new Date(availableDate.date).toLocaleDateString()}`,
             }
         }
@@ -184,8 +212,9 @@ const sendDoctorsMessage = async () => {
  */
 // Run the scheduler at 06:00 on every day of every month => '0 6 * * *' 
 // For testing => '* * * * * *'
-const smsScheduler = schedule.scheduleJob('0 6 * * *', () => {
+const smsScheduler = schedule.scheduleJob('0 6 * * *' , () => {
 
+    getDoctorsNumber();
     getTodaysAppointments();
 
     emitter.on("set_appointment_details", () => {
@@ -193,7 +222,7 @@ const smsScheduler = schedule.scheduleJob('0 6 * * *', () => {
     })
 
     emitter.on("set_available_date_details", () => {
-        sendDoctorsMessage();
+        sendDoctorsMessage(doctorsNumber);
     })
     
     //smsScheduler.cancel();
