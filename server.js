@@ -27,6 +27,8 @@ const uniformSkirtRoute = require('./routes/UniformSkirtRoute');
 const UniformTotalsRoute = require("./routes/UniformTotalsRoute");
 
 const uniformOrderRoute = require('./routes/UniformOrderRoute');
+const UniformSupplierRoute = require('./routes/UniformSupplierRoute');
+
 const UniformOrder = require('./models/UniformOrderModel');
 
 
@@ -43,6 +45,7 @@ app.use('/api/UniformOrder', UniformOrderRoute);
 app.use('/api/UniformShirt', UniformShirtRoute);
 app.use('/api/UniformSkirt', uniformSkirtRoute);
 app.use('/api/UniformTotals', UniformTotalsRoute);
+app.use('/api/supplierDetails', UniformSupplierRoute);
 
 
 app.use('/api/inquiry/', inquiryRoute);
