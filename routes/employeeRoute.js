@@ -1299,22 +1299,31 @@ router.delete('/deletedrivers/:id', async (req, res) => {
 
 
 // vehicle Register
+// Vehicle Register
 router.post('/Vehicleregister', async (req, res) => {
     try {
         let numSeats;
         if (req.body.Type === 'bus') {
-            numSeats = 100 * req.body.numBuses; // Calculate total seats for multiple buses
+            numSeats = 100 * req.body.numBuses; 
         } else if (req.body.Type === 'van') {
-            numSeats = 24;
+            numSeats = 24 * req.body.numVans; 
         }
-        const vehicleRegister = new Vregister({...req.body, numSeats});
+
+        const vehicleRegister = new Vregister({ ...req.body, numSeats });
         await vehicleRegister.save();
-        res.status(200).send({ message: "Vehicle Registered Successfully", success: true });
+
+        // Update total seat count based on the type of vehicle
+        const totalSeats = { bus: 100, van: 24 }; 
+        const updatedTotalSeats = { ...totalSeats };
+        updatedTotalSeats[req.body.Type] += numSeats;
+
+        res.status(200).send({ message: "Vehicle Registered Successfully", success: true, totalSeats: updatedTotalSeats });
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Vehicle Registration Unsuccessful.", success: false, error });
     }
 });
+
 
 
 // read Vehicle register
@@ -1395,6 +1404,15 @@ router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
         res.status(500).send({ message: "Payment Slip Upload unsuccessful.", success: false, error });
     }
 });
+
+
+
+
+
+
+
+
+
 
 
 
