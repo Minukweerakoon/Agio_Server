@@ -1051,7 +1051,7 @@ router.post("/TraBooking", authMiddleware2, async (req, res) => {
         const updatedRemainingSeats = { ...totalSeats };
 
         // Update remaining seats count
-        const vehicles = await VehicleRegister.find({ type: vehicleType });
+        const vehicles = await Vregister.find({ type: vehicleType });
         const numOfVehicles = vehicles.length;
         updatedRemainingSeats[vehicleType] = totalSeats[vehicleType] * numOfVehicles;
 
