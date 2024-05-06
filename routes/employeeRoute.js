@@ -240,8 +240,8 @@ router.get('/getleavedep', async (req, res) => {
         const employeeIds = employees.map(employee => employee._id);
         console.log(employeeIds); // Log the extracted employee IDs
         
-        // Fetch leave data for the found employee IDs
-        const leaveData = await Leave.find({ userid: { $in: employeeIds } }); 
+        // Fetch leave data for the found employee IDs with status "approved"
+        const leaveData = await Leave.find({ userid: { $in: employeeIds }, status: 'approved' }); 
         console.log(leaveData) // Log the fetched leave data
         
         res.json({ leave: leaveData });
@@ -250,6 +250,7 @@ router.get('/getleavedep', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch leave data' });
     }
 });
+
 
 router.get('/getleave3/:id', async (req, res) => {
     try {
@@ -2232,6 +2233,7 @@ router.get('/leave-count-dep', async (req, res) => {
   
       // Extract employee IDs
       const employeeIds = employees.map(emp => emp._id);
+      console.log(employeeIds)
   
       // Parse month into year and month
       const [year, monthNumber] = month.split('-');
