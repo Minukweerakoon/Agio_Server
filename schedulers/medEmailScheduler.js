@@ -101,7 +101,7 @@ const sendEmail = async (transporter, mailOptions) => {
 // Run the scheduler at 00:10 on the 1st day of every month => '10 0 1 * *'
 // For testing => '* * * * * *'
 const medMonthlyReportGenerateScheduler = schedule.scheduleJob(
-  "10 0 1 * *",
+  '10 0 1 * *',
   () => {
     console.log("Med email scheduler ran");
 
@@ -118,7 +118,7 @@ const medMonthlyReportGenerateScheduler = schedule.scheduleJob(
  */
 // Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *'
 // For testing => '* * * * * *'
-const medMonthlyReportScheduler = schedule.scheduleJob("30 0 1 * *", () => {
+const medMonthlyReportScheduler = schedule.scheduleJob('30 0 1 * *', () => {
   var monthName = new Date(
     new Date().setDate(new Date().getDate() - 1)
   ).toLocaleString("default", { month: "long" });

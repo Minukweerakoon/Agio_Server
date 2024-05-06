@@ -14,7 +14,7 @@ const inquirySchema = new mongoose.Schema({
         required: true
     },
     inquirydate: {
-        type: Date, // Keep the type as Date
+        type: Date, 
         required: true
     },
     phoneNumber: {
@@ -42,9 +42,9 @@ const inquirySchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Middleware function to extract only the date part of inquirydate
+// Middleware function to extract only the date part of inquirydate(not working)
 inquirySchema.pre('save', function(next) {
-    // Extract date part only and set it to the inquiry date field
+    
     this.inquirydate = this.inquirydate.toISOString().split('T')[0];
     next();
 });
