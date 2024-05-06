@@ -924,6 +924,20 @@ router.post('/inquiry', async (req, res) => {
         ...req.body
       });
       await inquiry.save();
+      const inqman = await Employee.findOne({isinquiry:true})
+      const unseenNotifications = inqman.unseenNotifications
+      unseenNotifications.push({
+        type:"New inquiry request",
+        message :`${ inquiry.username} has submitted an inquiry`,
+        data:{
+            inqid:inquiry._id,
+            name: inquiry.name
+        },
+        onclickpath:"/"
+
+    })
+    await Employee.findByIdAndUpdate(inqman._id,{unseenNotifications});
+
   
       res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
     } catch (error) {
