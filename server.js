@@ -95,6 +95,10 @@ app.use('/api/medEmployee', medEmployeeRoute);
 
 // Run the medEmailScheduler
 const medEmailScheduler = require("./schedulers/medEmailScheduler");
+// Run the medSMSScheduler
+const medSMSScheduler = require("./schedulers/medSMSScheduler.js");
+// Run the medDateControl
+const medDateControl = require("./schedulers/medDateControl.js");
 
 
 // Client connection to listen for request

@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     type: Object,
     required:false,
 },
+video: {
+  type: Object, // Assuming you'll store the file path or name
+  required: false,
+},
 
   Description: {
     type: String,
@@ -41,7 +45,9 @@ const userSchema = new mongoose.Schema({
     text: String,
     empId :String,
     createdAt: Date
-}]
+}],
+
+
   
 });
 
