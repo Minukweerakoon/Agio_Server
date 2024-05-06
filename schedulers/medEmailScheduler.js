@@ -1,6 +1,7 @@
 const schedule = require("node-schedule");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
+const Employee = require("../models/employeeModel");
 
 const EventEmitter = require("events");
 const emitter = new EventEmitter();
@@ -14,17 +15,19 @@ var DOCTOR_EMAIL = null;
 // Get doctor's email
 const getDoctorEmail = async () => {
     try {
-      const response = await Employee.findOne({
+      const docResponse = await Employee.findOne({
         isDoctor: true,
       });
   
       // Log the response
       console.log(
-        `@getDoctorEmail() @medEmailScheduler employees Response => ${response.length} records retrieved`
+        `@getDoctorEmail() @medEmailScheduler employees Response => ${docResponse.length} records retrieved`
       );
   
-      DOCTOR_EMAIL = response.username_log;
+      console.log("docResponse => ", docResponse.username_log);
+      DOCTOR_EMAIL = docResponse.username_log;
   
+      emitter.emit("set_doctor_email");
     } catch (error) {
       console.log(
         `Error occured when retrieving doctor's phone number getDoctorEmail() @medEmailScheduler => `,
@@ -101,7 +104,7 @@ const sendEmail = async (transporter, mailOptions) => {
 // Run the scheduler at 00:10 on the 1st day of every month => '10 0 1 * *'
 // For testing => '* * * * * *'
 const medMonthlyReportGenerateScheduler = schedule.scheduleJob(
-  "10 0 1 * *",
+  '10 0 1 * *',
   () => {
     console.log("Med email scheduler ran");
 
@@ -118,14 +121,17 @@ const medMonthlyReportGenerateScheduler = schedule.scheduleJob(
  */
 // Run the scheduler at 00:30 on the 1st day of every month => '30 0 1 * *'
 // For testing => '* * * * * *'
-const medMonthlyReportScheduler = schedule.scheduleJob("30 0 1 * *", () => {
+const medMonthlyReportScheduler = schedule.scheduleJob('30 0 1 * *', () => {
   var monthName = new Date(
     new Date().setDate(new Date().getDate() - 1)
   ).toLocaleString("default", { month: "long" });
 
   getDoctorEmail();
-  setMailOptions(monthName);
-  sendEmail(transporter, mailOptions);
+
+  emitter.on("set_doctor_email", () => {
+    setMailOptions(monthName);
+    sendEmail(transporter, mailOptions);
+  })
 
   //medMonthlyReportScheduler.cancel();
 });
