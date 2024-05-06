@@ -9,6 +9,11 @@ const authMiddleware2 = require("../middleware/authMiddleware2");
 const rewardassignmiddleware = require("../middleware/AssignRewards")
 const Targetm = require("../models/per_Target");
 const Reward = require("../models/per_Reward")
+const PDFDocument = require("pdfkit");
+const path = require('path');
+const fs = require('fs');
+
+
 
 const storage = multer.diskStorage({
    
@@ -318,18 +323,16 @@ router.route("/setinditarget").post(async (req, res) => {
   let empid = req.body.empid;
   let target = Number(req.body.target);
 
-  // Extract only necessary fields from req.body
   
 
-  // Assuming Targetm is a model for MongoDB or similar database
   const newTarget = new Targetm({ empid, target });
 
   try {
-    // Save the new target to the database
+    
     await newTarget.save();
     res.status(200).send("Target set successfully.");
   } catch (err) {
-    // Handle any errors that occur during saving
+    
     console.error(err);
     res.status(500).send("Error setting target.");
   }
@@ -365,7 +368,7 @@ router.route("/settarget").post(async (req, res) => {
     await Promise.all(insertPromises);
     res.status(200).send("Target set successfully.");
   } catch (err) {
-    // Handle any errors that occur during saving
+  
     console.error(err);
     res.status(500).send("Error setting target.");
   }
@@ -437,11 +440,11 @@ router.route("/gettargetempid").get(authMiddleware2,async (req,res) => {
 router.route("/deletetarget").delete(async (req, res) => {
   //let empid = req.body.empid;
   //let target = Number(req.body.target);
- 
+ console.log("delete goal")
 
   const pipeline1 = [{
     $match: {
-      jobRole: "worker"
+      jobRole: "factory worker"
     }
   },
   {
@@ -476,93 +479,107 @@ router.route("/targetcurrentscore").get(authMiddleware2,async (req,res) => {
 
   const id = req.body.employeeId;
   const employee = await Employee.findOne({ _id: id });
-  
-  console.log("aaaa")
+  if(employee.jobRole != "factory worker"){
+
+    console.log("Not a factory worker")
+
+  }else{
+
+    console.log("aaaa")
   console.log(id)
   console.log(employee.empid)
   const empid = employee.empid;
 
   const result1 = await Targetm.findOne({empid : empid});
-  console.log(result1);
+  console.log("llllllllojhgg")
+console.log(result1)
+  if(result1){
+    console.log(result1);
     
-  console.log("target");
-  console.log(result1.date);
-  console.log(result1.endDate)
-
-  const sdate = result1.date;
-  const edate = result1.endDate;
-
-  try{
-  const pipeline =[
-    {
-      '$match': {
-        'empid': employee.empid,
-        'date': {
-          $gte: sdate,
-          $lt: edate
+    console.log("target");
+    console.log(result1.date);
+    console.log(result1.endDate)
+  
+    const sdate = result1.date;
+    const edate = result1.endDate;
+  
+    try{
+    const pipeline =[
+      {
+        '$match': {
+          'empid': employee.empid,
+          'date': {
+            $gte: sdate,
+            $lt: edate
+          }
+        }
+      }, {
+        '$group': {
+          '_id': '$empid', 
+          'totalYieldDry': {
+            '$sum': '$YieldDry'
+          }, 
+          'totalYieldCutsWet': {
+            '$sum': '$YieldCutsWet'
+          }, 
+          'totalGrade_A_Cuts': {
+            '$sum': '$Grade_A_Cuts'
+          }, 
+          'totalGrade_B_Cuts': {
+            '$sum': '$Grade_B_Cuts'
+          }, 
+          'totalGrade_C_Cuts': {
+            '$sum': '$Grade_C_Cuts'
+          }, 
+          'totalGrade_F_Cuts': {
+            '$sum': '$Grade_F_Cuts'
+          }, 
+          'averageScore': {
+            '$sum': '$score'
+          }
+        }
+      }, {
+        '$lookup': {
+          'from': 'employees', 
+          'localField': '_id', 
+          'foreignField': 'empid', 
+          'as': 'result'
+        }
+      }, {
+        '$unwind': {
+          'path': '$result'
+        }
+      }, {
+        '$project': {
+          '_id': 0, 
+          'empid': '$_id', 
+          'Name': '$result.fname', 
+          'Group': '$result.Group', 
+          'Line': '$result.Line', 
+          'totalYieldDry': 1, 
+          'totalYieldCutsWet': 1, 
+          'totalGrade_A_Cuts': 1, 
+          'totalGrade_B_Cuts': 1, 
+          'totalGrade_C_Cuts': 1, 
+          'totalGrade_F_Cuts': 1, 
+          'averageScore': 1, 
+          'documents': 1
         }
       }
-    }, {
-      '$group': {
-        '_id': '$empid', 
-        'totalYieldDry': {
-          '$sum': '$YieldDry'
-        }, 
-        'totalYieldCutsWet': {
-          '$sum': '$YieldCutsWet'
-        }, 
-        'totalGrade_A_Cuts': {
-          '$sum': '$Grade_A_Cuts'
-        }, 
-        'totalGrade_B_Cuts': {
-          '$sum': '$Grade_B_Cuts'
-        }, 
-        'totalGrade_C_Cuts': {
-          '$sum': '$Grade_C_Cuts'
-        }, 
-        'totalGrade_F_Cuts': {
-          '$sum': '$Grade_F_Cuts'
-        }, 
-        'averageScore': {
-          '$sum': '$score'
-        }
-      }
-    }, {
-      '$lookup': {
-        'from': 'employees', 
-        'localField': '_id', 
-        'foreignField': 'empid', 
-        'as': 'result'
-      }
-    }, {
-      '$unwind': {
-        'path': '$result'
-      }
-    }, {
-      '$project': {
-        '_id': 0, 
-        'empid': '$_id', 
-        'Name': '$result.fname', 
-        'Group': '$result.Group', 
-        'Line': '$result.Line', 
-        'totalYieldDry': 1, 
-        'totalYieldCutsWet': 1, 
-        'totalGrade_A_Cuts': 1, 
-        'totalGrade_B_Cuts': 1, 
-        'totalGrade_C_Cuts': 1, 
-        'totalGrade_F_Cuts': 1, 
-        'averageScore': 1, 
-        'documents': 1
-      }
-    }
-  ];
-    const result = await records.aggregate(pipeline);
-    console.log(result)
-    res.json(result);
-}catch(error){
-        console.log(error);
-        res.status(500).json({error:"internal server error"});
-}
+    ];
+      const result = await records.aggregate(pipeline);
+      console.log(result)
+      res.json(result);
+  }catch(error){
+          console.log(error);
+          res.status(500).json({error:"internal server error"});
+  }
+  }else{
+   console.log("no targets")
+  }
+  
+  }
+  
 
 });
 router.route("/update/:id").put(async (req,res)=>{
@@ -982,13 +999,12 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
       if (!employee) {
           return res.status(200).send({ message: "Employee does not exist", success: false });
       } else {
-          // Extract isAdmin value from the employee document
+
           const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications } = employee;
 
 
 
 
-          // Send response with isAdmin value and other data
           res.status(200).send({ success: true, data: { 
               isAdmin,
               isAnnHrsup,
@@ -1004,13 +1020,359 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
               username: employee.username_log,
               fullname:employee.fname,
               password : employee.password_log
-              // Include other necessary fields here
+             
           } });
       }
   } catch (error) {
       res.status(500).send({ message: "Error getting user info", success: false, error });
   }
 });
+
+//pdf generate
+
+router.route('/generate_perpdf').post(authMiddleware2, async (req, res) => {
+  console.log("qqqqqqqqqqqqqqqqqqqqqqqq")
+    try {
+      
+
+    
+          const id = req.body.employeeId;
+          console.log(id)
+          const period = req.body.time;
+          console.log(period);
+          console.log(id);
+          let time;
+          if (period == 'week'){
+             time = 7*24*60*60*1000;
+          }else if(period == 'year'){
+             time = 365*24*60*60*1000;
+          }else if(period == 'month'){
+             time = 30*24*60*60*1000;
+          }else{
+            time = 100*365*24*60*60*1000;
+          }
+          
+            const sdate = new Date();
+            const edate = new Date(sdate.getTime() - (time)) ;
+            console.log(sdate.toISOString());
+            console.log(edate.toISOString());
+
+            const employee = await Employee.findOne({ _id: id });
+            console.log(employee.empid)
+
+            
+              const pipeline =[
+                {
+                  '$match': {
+                    'empid': employee.empid,
+                    'date': {
+                      $gte: edate,
+                      $lt: sdate
+                    }
+                  }
+                }, {
+                  '$group': {
+                    '_id': '$empid', 
+                    'totalYieldDry': {
+                      '$sum': '$YieldDry'
+                    }, 
+                    'totalYieldCutsWet': {
+                      '$sum': '$YieldCutsWet'
+                    }, 
+                    'totalGrade_A_Cuts': {
+                      '$sum': '$Grade_A_Cuts'
+                    }, 
+                    'totalGrade_B_Cuts': {
+                      '$sum': '$Grade_B_Cuts'
+                    }, 
+                    'totalGrade_C_Cuts': {
+                      '$sum': '$Grade_C_Cuts'
+                    }, 
+                    'totalGrade_F_Cuts': {
+                      '$sum': '$Grade_F_Cuts'
+                    }, 
+                    'averageScore': {
+                      '$sum': '$score'
+                    }
+                  }
+                }, {
+                  '$lookup': {
+                    'from': 'employees', 
+                    'localField': '_id', 
+                    'foreignField': 'empid', 
+                    'as': 'result'
+                  }
+                }, {
+                  '$unwind': {
+                    'path': '$result'
+                  }
+                }, {
+                  '$project': {
+                    '_id': 0, 
+                    'empid': '$_id', 
+                    'Name': '$result.fname', 
+                    'Group': '$result.Group', 
+                    'Line': '$result.Line', 
+                    'totalYieldDry': 1, 
+                    'totalYieldCutsWet': 1, 
+                    'totalGrade_A_Cuts': 1, 
+                    'totalGrade_B_Cuts': 1, 
+                    'totalGrade_C_Cuts': 1, 
+                    'totalGrade_F_Cuts': 1, 
+                    'averageScore': 1, 
+                    'documents': 1
+                  }
+                }
+              ];
+                const result = await records.aggregate(pipeline);
+                console.log(result)
+                console.log("kkkkk")
+                console.log(result[0].Name)
+
+         
+          
+          
+      
+  
+      if (!result) {
+        return res.status(404).json({ success: false, message: 'Performance details not found' });
+      }
+  
+      // Create a new PDF document
+      const doc = new PDFDocument();
+
+      const borderWidth = 10;
+      doc.rect(borderWidth, borderWidth, doc.page.width - 2 * borderWidth, doc.page.height - 2 * borderWidth).stroke();
+  
+      // Pipe the PDF content to the response
+      doc.pipe(res);
+
+      // Load the logo image
+      const logoPath = path.join(__dirname, '../images/logo.png');
+      const logoData = fs.readFileSync(logoPath);
+
+      // Calculate the width of the logo image
+      const logoWidth = 100;
+
+      // Calculate the position to center the logo image horizontally
+      const centerX = (doc.page.width - logoWidth) / 2;
+
+      // Add the logo image to the top of the document
+      doc.image(logoData, centerX, 50, { width: logoWidth});
+
+      doc.y = 150;
+      doc.fontSize(24).text(`Performance Details Report for a ${period} `, { align: 'center' });
+
+      doc.moveDown();
+      doc.moveDown();
+      
+      // Add content to the PDF
+       // Add the name with some space below
+       doc.fontSize(16).text(`Name                        : ${result[0].Name}`).moveDown(0.5);
+
+       // Add the Employee ID with some space below
+       doc.fontSize(16).text(`Employee ID              : ${result[0].empid}`).moveDown(0.5);
+
+       // Add the insurance number with some space below
+       doc.fontSize(16).text(`Yield Dry Weight        : ${Math.round(result[0].totalYieldDry)}`).moveDown(0.5);
+
+       // Add the phone number with some space below
+       doc.fontSize(16).text(`Yield Cuts Wet           : ${Math.round(result[0].totalYieldCutsWet)}`).moveDown(0.5);
+
+       // Add the description with some space below
+       doc.fontSize(16).text(`Grade A Cuts             : ${result[0].totalGrade_A_Cuts}`).moveDown(0.5);
+
+       // Add the file with some space below
+       doc.fontSize(16).text(`Grade B Cuts             : ${result[0].totalGrade_B_Cuts}`).moveDown(0.5);
+
+       // Add the status with some space below
+       doc.fontSize(16).text(`Grade C Cuts             : ${result[0].totalGrade_C_Cuts}`).moveDown(0.5);
+
+       doc.fontSize(16).text(`Grade F Cuts             : ${result[0].totalGrade_F_Cuts}`).moveDown(0.5);
+
+       doc.fontSize(16).text(`Score                         : ${Math.round(result[0].averageScore)}`).moveDown(0.5);
+
+
+
+      // End the document
+      doc.end();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      res.status(500).json({ success: false, message: 'Failed to generate PDF' });
+    }
+  });
+
+  router.route('/generate_perpdf/:empid').post( async (req, res) => {
+    console.log("qqqqqqqqqqqqqqqqqqqqqqqq")
+    empid = req.params.empid;
+    console.log(empid)
+      try {
+        
+  
+      
+            const period = req.body.time;
+            console.log(period);
+            let time;
+            if (period == 'week'){
+               time = 7*24*60*60*1000;
+            }else if(period == 'year'){
+               time = 365*24*60*60*1000;
+            }else if(period == 'month'){
+               time = 30*24*60*60*1000;
+            }else{
+              time = 100*365*24*60*60*1000;
+            }
+            
+              const sdate = new Date();
+              const edate = new Date(sdate.getTime() - (time)) ;
+              console.log(sdate.toISOString());
+              console.log(edate.toISOString());
+  
+             
+              
+                const pipeline =[
+                  {
+                    '$match': {
+                      'empid':empid,
+                      'date': {
+                        $gte: edate,
+                        $lt: sdate
+                      }
+                    }
+                  }, {
+                    '$group': {
+                      '_id': '$empid', 
+                      'totalYieldDry': {
+                        '$sum': '$YieldDry'
+                      }, 
+                      'totalYieldCutsWet': {
+                        '$sum': '$YieldCutsWet'
+                      }, 
+                      'totalGrade_A_Cuts': {
+                        '$sum': '$Grade_A_Cuts'
+                      }, 
+                      'totalGrade_B_Cuts': {
+                        '$sum': '$Grade_B_Cuts'
+                      }, 
+                      'totalGrade_C_Cuts': {
+                        '$sum': '$Grade_C_Cuts'
+                      }, 
+                      'totalGrade_F_Cuts': {
+                        '$sum': '$Grade_F_Cuts'
+                      }, 
+                      'averageScore': {
+                        '$sum': '$score'
+                      }
+                    }
+                  }, {
+                    '$lookup': {
+                      'from': 'employees', 
+                      'localField': '_id', 
+                      'foreignField': 'empid', 
+                      'as': 'result'
+                    }
+                  }, {
+                    '$unwind': {
+                      'path': '$result'
+                    }
+                  }, {
+                    '$project': {
+                      '_id': 0, 
+                      'empid': '$_id', 
+                      'Name': '$result.fname', 
+                      'Group': '$result.Group', 
+                      'Line': '$result.Line', 
+                      'totalYieldDry': 1, 
+                      'totalYieldCutsWet': 1, 
+                      'totalGrade_A_Cuts': 1, 
+                      'totalGrade_B_Cuts': 1, 
+                      'totalGrade_C_Cuts': 1, 
+                      'totalGrade_F_Cuts': 1, 
+                      'averageScore': 1, 
+                      'documents': 1
+                    }
+                  }
+                ];
+                  const result = await records.aggregate(pipeline);
+                  console.log(result)
+                  console.log("kkkkk")
+                  console.log(result[0].Name)
+  
+           
+            
+            
+        
+    
+        if (!result) {
+          return res.status(404).json({ success: false, message: 'Performance details not found' });
+        }
+    
+        // Create a new PDF document
+        const doc = new PDFDocument();
+  
+        const borderWidth = 10;
+        doc.rect(borderWidth, borderWidth, doc.page.width - 2 * borderWidth, doc.page.height - 2 * borderWidth).stroke();
+    
+        // Pipe the PDF content to the response
+        doc.pipe(res);
+  
+        // Load the logo image
+        const logoPath = path.join(__dirname, '../images/logo.png');
+        const logoData = fs.readFileSync(logoPath);
+  
+        // Calculate the width of the logo image
+        const logoWidth = 100;
+  
+        // Calculate the position to center the logo image horizontally
+        const centerX = (doc.page.width - logoWidth) / 2;
+  
+        // Add the logo image to the top of the document
+        doc.image(logoData, centerX, 50, { width: logoWidth});
+  
+        doc.y = 150;
+        doc.fontSize(24).text(`Performance Details Report for a ${period} `, { align: 'center' });
+  
+        doc.moveDown();
+        doc.moveDown();
+        
+        // Add content to the PDF
+         // Add the name with some space below
+         doc.fontSize(16).text(`Name                        : ${result[0].Name}`).moveDown(0.5);
+  
+         // Add the Employee ID with some space below
+         doc.fontSize(16).text(`Employee ID              : ${result[0].empid}`).moveDown(0.5);
+  
+         // Add the insurance number with some space below
+         doc.fontSize(16).text(`Yield Dry Weight        : ${Math.round(result[0].totalYieldDry)}`).moveDown(0.5);
+  
+         // Add the phone number with some space below
+         doc.fontSize(16).text(`Yield Cuts Wet           : ${Math.round(result[0].totalYieldCutsWet)}`).moveDown(0.5);
+  
+         // Add the description with some space below
+         doc.fontSize(16).text(`Grade A Cuts             : ${result[0].totalGrade_A_Cuts}`).moveDown(0.5);
+  
+         // Add the file with some space below
+         doc.fontSize(16).text(`Grade B Cuts             : ${result[0].totalGrade_B_Cuts}`).moveDown(0.5);
+  
+         // Add the status with some space below
+         doc.fontSize(16).text(`Grade C Cuts             : ${result[0].totalGrade_C_Cuts}`).moveDown(0.5);
+  
+         doc.fontSize(16).text(`Grade F Cuts             : ${result[0].totalGrade_F_Cuts}`).moveDown(0.5);
+  
+         doc.fontSize(16).text(`Score                         : ${Math.round(result[0].averageScore)}`).moveDown(0.5);
+  
+  
+  
+        // End the document
+        doc.end();
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).json({ success: false, message: 'Failed to generate PDF' });
+      }
+    });
+
+
+
 
 
 
