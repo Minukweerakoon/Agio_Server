@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema({
         type: Object,
         required:false,
     },
+    suggestedDate: { // Adding the suggestedDate field
+        type: Date,
+        required: false // Assuming it's not always required
+    },
+   
     
 
   

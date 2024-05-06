@@ -26,7 +26,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     
-      }
+      },
+      response: [{
+        choice: String,
+        empId: String,
+        department:String,
+        createdAt: Date
+    }]
 })
 const AnnCalFormModel = mongoose.model("Notice", userSchema);
 
