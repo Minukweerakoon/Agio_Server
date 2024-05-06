@@ -55,7 +55,7 @@ const getDoctorsNumber = async () => {
 
 // Get today's appointments
 const getTodaysAppointments = async () => {
-  //const today = new Date(new Date().getFullYear(), new Date().getMonth(), 6);
+  //const today = new Date(new Date().getFullYear(), new Date().getMonth(), 16);
   const today = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
@@ -230,7 +230,7 @@ const sendDoctorsMessage = async (docNumber) => {
  */
 // Run the scheduler at 06:00 on every day of every month => '0 6 * * *'
 // For testing => '* * * * * *'
-const smsScheduler = schedule.scheduleJob("0 6 * * *", () => {
+const smsScheduler = schedule.scheduleJob('* * * * * *', () => {
   getDoctorsNumber();
   getTodaysAppointments();
 
@@ -242,5 +242,5 @@ const smsScheduler = schedule.scheduleJob("0 6 * * *", () => {
     sendDoctorsMessage(doctorsNumber);
   });
 
-  //smsScheduler.cancel();
+  smsScheduler.cancel();
 });
