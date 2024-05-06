@@ -23,12 +23,12 @@ var appointmentList = [];
 
 // Get today's appointments
 const getTodaysAvailability = async () => {
-  const today = new Date(new Date().getFullYear(), new Date().getMonth(), 3);
-  /*const today = new Date(
+  //const today = new Date(new Date().getFullYear(), new Date().getMonth(), 3);
+  const today = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
     new Date().getDate()
-  );*/
+  );
   const todayIso = today.toISOString();
 
   // Check if today is an available date

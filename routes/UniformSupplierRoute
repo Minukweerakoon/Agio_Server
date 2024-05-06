@@ -1,0 +1,77 @@
+const express = require('express');
+const router = express.Router();
+const SupplierDetails = require('../models/UniformSupplierModel');
+
+// Create a new supplier detail
+router.post('/supplierDetails', async (req, res) => {
+  try {
+    const supplierDetail = new SupplierDetails(req.body);
+    await supplierDetail.save();
+    res.status(201).send(supplierDetail);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+// Get all supplier details
+router.get('/supplierDetails', async (req, res) => {
+  try {
+    const supplierDetails = await SupplierDetails.find();
+    res.send(supplierDetails);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Get a single supplier detail by ID
+router.get('/supplierDetails/:id', async (req, res) => {
+  try {
+    const supplierDetail = await SupplierDetails.findById(req.params.id);
+    if (!supplierDetail) {
+      return res.status(404).send({ message: 'Supplier detail not found' });
+    }
+    res.send(supplierDetail);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Update a supplier detail by ID
+router.patch('/supplierDetails/:id', async (req, res) => {
+  try {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['supplierName', 'orderId', 'type', 'numberOfUnits', 'cost', 'date'];
+    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+    if (!isValidOperation) {
+      return res.status(400).send({ error: 'Invalid updates!' });
+    }
+
+    const supplierDetail = await SupplierDetails.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+    if (!supplierDetail) {
+      return res.status(404).send({ message: 'Supplier detail not found' });
+    }
+
+    res.send(supplierDetail);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+// Delete a supplier detail by ID
+router.delete('/supplierDetails/:id', async (req, res) => {
+  try {
+    const supplierDetail = await SupplierDetails.findByIdAndDelete(req.params.id);
+
+    if (!supplierDetail) {
+      return res.status(404).send({ message: 'Supplier detail not found' });
+    }
+
+    res.send({ message: 'Supplier detail deleted successfully' });
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+module.exports = router;
