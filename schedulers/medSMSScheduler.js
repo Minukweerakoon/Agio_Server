@@ -55,12 +55,12 @@ const getDoctorsNumber = async () => {
 
 // Get today's appointments
 const getTodaysAppointments = async () => {
-  //const today = new Date(new Date().getFullYear(), new Date().getMonth(), 16);
-  const today = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    new Date().getDate()
-  );
+  const today = new Date(new Date().getFullYear(), new Date().getMonth(), 4);
+  // const today = new Date(
+  //   new Date().getFullYear(),
+  //   new Date().getMonth(),
+  //   new Date().getDate()
+  // );
   const todayIso = today.toISOString();
 
   // Check if today is an available date
