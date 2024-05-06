@@ -1,4 +1,4 @@
-// routes/UniformTotalsRoute.js
+
 const express = require('express');
 const router = express.Router();
 const UniformOrderModel = require('../models/UniformOrderModel');

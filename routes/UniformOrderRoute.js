@@ -1,4 +1,4 @@
-// UniformOrderRoute.js
+
 
 const express = require("express");
 const router = express.Router();
@@ -7,8 +7,20 @@ const UniformOrderModel = require('../models/UniformOrderModel');
 // POST route for submitting a uniform order
 router.post("/", async (req, res) => {
   try {
-    const newUniformOrder = new UniformOrderModel(req.body);
+    const { employeeNumber, position, tshirtSize, waistSize, uniformCount } = req.body;
+    
+    // Here, you can perform any necessary validations on the form data
+    
+    // Create a new instance of the UniformOrderModel and save it to the database
+    const newUniformOrder = new UniformOrderModel({
+      employeeNumber,
+      position,
+      tshirtSize,
+      waistSize,
+      uniformCount
+    });
     await newUniformOrder.save();
+
     res.status(200).json({ message: "Uniform order submitted successfully", success: true });
   } catch (error) {
     console.error('Error submitting uniform order:', error);
@@ -60,6 +72,25 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error('Error deleting uniform order:', error);
     res.status(500).json({ message: "Failed to delete uniform order", success: false });
+  }
+});
+
+// Route to fetch total number of shirts ordered by Factory Workers
+router.get('/shirtTotals', async (req, res) => {
+  try {
+    const shirtTotals = await UniformOrderModel.aggregate([
+      { $match: { position: 'Factory Worker', tshirtSize: { $exists: true } } },
+      {
+        $group: {
+          _id: '$tshirtSize',
+          totalShirts: { $sum: '$uniformCount' }
+        }
+      }
+    ]);
+    res.json(shirtTotals);
+  } catch (error) {
+    console.error('Error fetching shirt totals:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
