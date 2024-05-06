@@ -2181,7 +2181,106 @@ router.get('/getWarnings/:empid', async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to fetch warnings' });
     }
 });
+//reporttt
+router.get('/leave-report', async (req, res) => {
+    try {
+        const { month, department: selectedDepartment } = req.query; // Rename department to selectedDepartment
 
+        // Parse the month string to extract the year and month components
+        const [year, monthNumber] = month.split('-');
+
+        // Construct start and end dates for the month
+        const startDate = new Date(year, monthNumber - 1, 1); // Note: month is zero-based
+        const endDate = new Date(year, monthNumber, 0); // Last day of the month
+
+        // Fetch leave data for the specified month
+        const leaveData = await Leave.find({
+            startDate: { $gte: startDate },
+            endDate: { $lte: endDate }
+        });
+
+        // Extract unique user IDs from leave data
+        const userIds = [...new Set(leaveData.map(leave => leave.userid))];
+
+        // Fetch employee data for the extracted user IDs and matching department
+        const employees = await Employee.find({ _id: { $in: userIds }, department: selectedDepartment });
+
+        // Combine leave and employee data
+        const reportData = leaveData.map(leave => {
+            const employee = employees.find(emp => emp._id.toString() === leave.userid.toString());
+            if (employee && employee.department === selectedDepartment) {
+                return { leave, department: employee.department };
+            } else {
+                return null; // If employee department doesn't match selected department, return null
+            }
+        }).filter(entry => entry !== null); // Filter out null entries
+
+        // Respond with the fetched report data
+        res.json({ success: true, data: reportData });
+    } catch (error) {
+        // Handle errors
+        console.error('Error fetching leave report:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch leave report.' });
+    }
+});
+router.get('/leave-count-dep', async (req, res) => {
+    try {
+      const { department, month } = req.query;
+  
+      // Find all employees in the given department
+      const employees = await Employee.find({ department });
+  
+      // Extract employee IDs
+      const employeeIds = employees.map(emp => emp._id);
+  
+      // Parse month into year and month
+      const [year, monthNumber] = month.split('-');
+  
+      // Find all leaves for the given department and month
+      const leaves = await Leave.find({
+        userid: { $in: employeeIds },
+        startDate: {
+          $gte: new Date(year, monthNumber - 1, 1), // Start of the month
+          $lt: new Date(year, monthNumber, 1) // Start of next month
+        },
+        status: 'approved' // Consider only approved leaves
+      });
+  
+      // Initialize counters
+      let annualLeaveCount = 0;
+      let medicalLeaveCount = 0;
+      let generalLeaveCount = 0;
+  
+      // Count leave types
+      leaves.forEach(leave => {
+        switch (leave.Type) {
+          case 'Annual':
+            annualLeaveCount++;
+            break;
+          case 'Medical':
+            medicalLeaveCount++;
+            break;
+          case 'General':
+            generalLeaveCount++;
+            break;
+          default:
+            break;
+        }
+      });
+
+      console.log(annualLeaveCount,medicalLeaveCount,generalLeaveCount)
+  
+      // Send response with leave counts
+      res.json({
+        annualLeaveCount,
+        medicalLeaveCount,
+        generalLeaveCount
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
 
 
 
