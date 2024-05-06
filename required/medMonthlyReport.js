@@ -121,7 +121,7 @@ const getSelectedRangeAvailableDates = async () => {
     var month;
     var monthName;
     // Get the numbers of selected months
-    console.log(`months : ${Number(selectedRange[0].$M)}, ${Number(selectedRange[1].$M)}`)
+    //console.log(`months : ${Number(selectedRange[0].$M)}, ${Number(selectedRange[1].$M)}`)
     for (
       var m = Number(selectedRange[0].$M);
       m <= Number(selectedRange[1].$M);
@@ -187,7 +187,7 @@ const getSelectedRangeAvailableDates = async () => {
       monthList.push(month);
     }
 
-    console.log("monthList => ", monthList.length);
+    //console.log("monthList => ", monthList.length);
     // Add the available dates & appointments to the corresponding month
     for (var mObj of monthList) {
       var dateCount = 0;
@@ -195,7 +195,7 @@ const getSelectedRangeAvailableDates = async () => {
       var missedAppointmentCount = 0;
       var completedAppointmentCount = 0;
 
-      console.log("selectedRangeAvailableDates => ", selectedRangeAvailableDates.length);
+      //console.log("selectedRangeAvailableDates => ", selectedRangeAvailableDates.length);
       // Set the available date details to the month objects
       for (var dObj of selectedRangeAvailableDates) {
         if (
@@ -213,7 +213,7 @@ const getSelectedRangeAvailableDates = async () => {
         }
       }
 
-      console.log("selectedRangeAppointments => ", selectedRangeAppointments.length);
+      //console.log("selectedRangeAppointments => ", selectedRangeAppointments.length);
       // Set the appointment details to the month objects
       for (var aObj of selectedRangeAppointments) {
         if (
@@ -228,7 +228,7 @@ const getSelectedRangeAvailableDates = async () => {
         }
       }
 
-      console.log("monthObject.appointments => ", mObj.appointments.length);
+      //console.log("monthObject.appointments => ", mObj.appointments.length);
       // Set the appointment completion status
       for (var aObj of mObj.appointments) {
         if (aObj.status === "completed") {
@@ -373,8 +373,8 @@ If all details are available, create the pdf
 */
 emitter.on("detailsOk", () => {
     console.log("@medMonthlyReport => Pdf details Ok!");
-    console.log("@const: monthObjects => ", monthObjects);
-    console.log("@const: summary => ", summary);
+    //console.log("@const: monthObjects => ", monthObjects);
+    //console.log("@const: summary => ", summary);
     isDetailsSet = true;
     setupMonthlyReportLogic(monthObjects);
 })
@@ -741,6 +741,6 @@ module.exports = generateReport;
             clearInterval(intervalId);
             res.end();
         });
-    });
+   });
 }
 */

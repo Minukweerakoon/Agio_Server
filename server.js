@@ -22,10 +22,13 @@ app.use(cors())
 
 const UniformOrderRoute = require("./routes/UniformOrderRoute");
 const UniformShirtRoute = require('./routes/UniformShirtRoute'); 
+
 const uniformSkirtRoute = require('./routes/UniformSkirtRoute');
 const UniformTotalsRoute = require("./routes/UniformTotalsRoute");
 
 const uniformOrderRoute = require('./routes/UniformOrderRoute');
+const UniformSupplierRoute = require('./routes/UniformSupplierRoute');
+
 const UniformOrder = require('./models/UniformOrderModel');
 
 
@@ -38,12 +41,11 @@ app.use('/api/user', userRoute);
 app.use('/api/employee', employeeRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/uniform-orders', uniformOrderRoute);
-
-
 app.use('/api/UniformOrder', UniformOrderRoute);
 app.use('/api/UniformShirt', UniformShirtRoute);
 app.use('/api/UniformSkirt', uniformSkirtRoute);
 app.use('/api/UniformTotals', UniformTotalsRoute);
+app.use('/api/supplierDetails', UniformSupplierRoute);
 
 
 app.use('/api/inquiry/', inquiryRoute);
@@ -93,6 +95,10 @@ app.use('/api/medEmployee', medEmployeeRoute);
 
 // Run the medEmailScheduler
 const medEmailScheduler = require("./schedulers/medEmailScheduler");
+// Run the medSMSScheduler
+const medSMSScheduler = require("./schedulers/medSMSScheduler.js");
+// Run the medDateControl
+const medDateControl = require("./schedulers/medDateControl.js");
 
 
 // Client connection to listen for request

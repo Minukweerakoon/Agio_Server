@@ -29,13 +29,13 @@ router.post("/medical-new-available-date", authMiddleware, async (req, res) => {
     await newAvailableDate.save();
 
     res.status(200).send({
-      message: "New available date created",
+      message: "Successfully created a new available date record",
       success: true,
     });
   } catch (error) {
-    console.log(error);
+    console.log(`Error occured when creating new available date record @medDocotrRoute => `, error);
     res.status(400).send({
-      message: "Failed to create the new available date",
+      message: "Error occured when creating new available date record",
       success: false,
       error,
     });
@@ -66,12 +66,12 @@ router.post(
         });
       } else {
         res.status(200).send({
-          message: `No similar records for the available date: ${req.body.date} detected`,
+          message: `No similar records for the available date: ${req.body.date} foune`,
           success: false,
         });
       }
     } catch (error) {
-      console.log(error);
+      console.log(`Error occured when checking for a similar available date @medDocotrRoute => `, error);
       res.status(400).send({
         message: "Error occured when checking for a similar available date",
         success: false,
@@ -122,9 +122,9 @@ router.post(
         });
       }
     } catch (error) {
-      console.log(error);
+      console.log(`Error occured when updating the availble date record @medDocotrRoute => `, error);
       res.status(400).send({
-        message: "Update document error",
+        message: "Error occured when updating the availble date record",
         success: false,
         error,
       });
@@ -143,7 +143,7 @@ router.post("/medical-available-dates-read-existing", authMiddleware, async (req
     try {
         const existingDatesResponse = await AvailableDate.find(
         {  date: {
-            $gte: new Date(new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate()).toISOString(),
+            $gt: new Date(new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate()).toISOString(),
         }}
         );
 
@@ -153,7 +153,7 @@ router.post("/medical-available-dates-read-existing", authMiddleware, async (req
                 success: true,
                 fetched: existingDatesResponse,
             });
-            console.log("Existing available dates: ", existingDatesResponse.data);
+            //console.log("Existing available dates: ", existingDatesResponse.data);
         } else {
             res.status(200).send({
                 message: "Retrieving existing available date records was unsuccessful",
@@ -162,12 +162,12 @@ router.post("/medical-available-dates-read-existing", authMiddleware, async (req
         }
         
     } catch (error) {
+        console.log("Error occured when reading existing available dates @medDoctorRoute => ", error);
         res.status(400).send({
             message: "Error occured when reading existing available dates",
             success: false,
             error: error,
         })
-        console.log("Error occured when reading existing available dates @medDoctorRoute ", error);
     }
 })
 
@@ -199,12 +199,12 @@ router.post(
             }
             
         } catch (error) {
+            console.log("Error occured when deleting an existing available date @medDoctorRoute => ", error);
             res.status(400).send({
                 message: "Error occured when deleting an existing available date",
                 success: false,
                 error: error,
             })
-            console.log("Error occured when deleting an existing available date @medDoctorRoute ", error);
         }
     }
 )
@@ -231,7 +231,7 @@ router.post(
         success: true,
       });
     } catch (error) {
-      console.log(error);
+      console.log("Error occured when creating a new parameters-record @medDoctorRoute => ", error);
       res.status(400).send({
         message: "Error occured when creating a new parameters-record",
         success: false,
@@ -279,7 +279,7 @@ router.post(
         });
       }
     } catch (error) {
-      console.log(error);
+      console.log(`Error occured when updating a parameters-record @medDocotrRoute => `, error);
       res.status(400).send({
         message: "Error occured when updating a parameters-record",
         success: false,
@@ -316,12 +316,12 @@ router.post(
         });
       }
     } catch (error) {
+      console.log("Error occured when finding a parameters-record @medDoctorRoute => ", error);
       res.status(400).send({
         message: "Error occured when finding a parameters-record",
         success: false,
         error,
       });
-      console.log("Error occured when finding a parameters-record @medDoctorRoute: ", error);
     }
   }
 );
@@ -353,7 +353,7 @@ router.post("/medical-overview-read-all-available-dates-specific-month", authMid
               success: true,
               fetched: response,
           });
-          console.log("Existing available dates: ", response.data);
+          //console.log("Existing available dates: ", response.data);
       } else {
           res.status(200).send({
               message: "No existing available date records were found",
@@ -362,7 +362,7 @@ router.post("/medical-overview-read-all-available-dates-specific-month", authMid
       }
       
   } catch (error) {
-    console.log(`Error occured when retrieving all available date records @medDocotrRoute => `, error)
+      console.log(`Error occured when retrieving all available date records @medDocotrRoute => `, error)
       res.status(400).send({
           message: "Error occured when retrieving all available date records",
           success: false,
@@ -484,8 +484,7 @@ router.post("/medical-overview-update-one-appointment-status", authMiddleware, a
     }
     
   } catch (error) {
-    console.log(`Error occured when updating the appointment: ${req.body.recordId} @medDoctorRoute => `, error);
-
+      console.log(`Error occured when updating the appointment: ${req.body.recordId} @medDoctorRoute => `, error);
       res.status(400).send({
         message: `Error occured when updating the appointment: ${req.body.recordId}`,
         success: false,
@@ -530,7 +529,7 @@ router.post("/medical-reports-read-all-available-dates-specific-period", authMid
       }
       
   } catch (error) {
-    console.log(`Error occured when retrieving available date records for the given period @medDocotrRoute => `, error)
+      console.log(`Error occured when retrieving available date records for the given period @medDocotrRoute => `, error)
       res.status(400).send({
           message: "Error occured when retrieving available date records for the given period",
           success: false,
@@ -562,7 +561,7 @@ router.post("/medical-reports-read-all-appointments-specific-period", authMiddle
               success: true,
               fetched: response,
           });
-          console.log("Existing available dates: ", response);
+          //console.log("Existing available dates: ", response);
       } else {
           res.status(200).send({
               message: "No existing appointment records were found for the given period",
@@ -571,7 +570,7 @@ router.post("/medical-reports-read-all-appointments-specific-period", authMiddle
       }
       
   } catch (error) {
-    console.log(`Error occured when retrieving appointment records for the given period @medDocotrRoute => `, error)
+      console.log(`Error occured when retrieving appointment records for the given period @medDocotrRoute => `, error)
       res.status(400).send({
           message: "Error occured when retrieving appointment records for the given period",
           success: false,
