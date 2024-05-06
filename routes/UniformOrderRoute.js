@@ -7,8 +7,20 @@ const UniformOrderModel = require('../models/UniformOrderModel');
 // POST route for submitting a uniform order
 router.post("/", async (req, res) => {
   try {
-    const newUniformOrder = new UniformOrderModel(req.body);
+    const { employeeNumber, position, tshirtSize, waistSize, uniformCount } = req.body;
+    
+    // Here, you can perform any necessary validations on the form data
+    
+    // Create a new instance of the UniformOrderModel and save it to the database
+    const newUniformOrder = new UniformOrderModel({
+      employeeNumber,
+      position,
+      tshirtSize,
+      waistSize,
+      uniformCount
+    });
     await newUniformOrder.save();
+
     res.status(200).json({ message: "Uniform order submitted successfully", success: true });
   } catch (error) {
     console.error('Error submitting uniform order:', error);
