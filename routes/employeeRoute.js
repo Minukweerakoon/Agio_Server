@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware2");
+const authmiddleware3 = require("../middleware/authmiddleware3");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
@@ -19,6 +20,7 @@ const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
+const uploadvideo = require('../middleware/uploadvideo');
 const Notice = require('../models/AnnCalFormModel')
 
 const generateInquiryID = () => {
@@ -89,7 +91,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             // Extract isAdmin value from the employee document
-            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave,warning} = employee;
 
 
 
@@ -115,7 +117,8 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 password : employee.password_log,
                 userid: employee._id,
                 empid :employee.empid,
-                department:employee.department
+                department:employee.department,
+                warning,
 
 
             
@@ -459,7 +462,47 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 //announcments
-router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
+router.post('/AnnHRsup2', authMiddleware2, upload.single('video'), async (req, res) => {
+    try {
+      // Check if 'video' key exists in req.file
+      if (!req.file) {
+        throw new Error('Video is required');
+      }
+
+      // Extract video from request
+      const video = req.file;
+      
+      // Create a new announcement with the request body and video information
+      const announcement = new Announcement({
+        ...req.body,
+        video: video ? video.filename : null
+      });
+    
+      await announcement.save();
+    
+      // Create the notification object
+      const notification = {
+        type: "New announcement update",
+        message: `New announcement: ${announcement.anntitle}`,
+        data: {
+          announcementId: announcement._id,
+          announcementName: announcement.anntitle
+        },
+        onclickpath: "/" // Update this path as necessary
+      };
+    
+      // Update all employees with the new notification
+      await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
+    
+      res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true, announcement });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+    }
+  });
+
+  
+  router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
         const file = req.file
         // Create a new announcement with the request body and file information
@@ -490,6 +533,28 @@ router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
+router.get('/AnnHRsupReport/month', async (req, res) => {
+    try {
+        const { month } = req.query; // Expected format 'YYYY-MM'
+        const startDate = new Date(month + '-01'); // Start of the month
+        const endDate = new Date(month + '-01');
+        endDate.setMonth(endDate.getMonth() + 1); // One month after the start date
+
+        const announcements = await Announcement.find({
+            uploaddate: {
+                $gte: startDate,
+                $lt: endDate
+            }
+        });
+        res.status(200).json(announcements);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error fetching announcements for the month.", error });
+    }
+});
+
+
+
 router.get('/getAnnHRsup', async (req, res) => {
     try {
         const announcements = await Announcement.find();
@@ -1994,6 +2059,40 @@ router.get('/attendance', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch attendance data' });
     }
 });
+router.get('/attendance_leave', async (req, res) => {
+    try {
+        const date = req.query.date; // Date parameter from the query string
+        console.log(date);
+        
+        // Convert the date string to a Date object
+        const startDate = new Date(date);
+
+        // Extract the date portion without the time
+        const startDateWithoutTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+
+        // Find leaves with the specified start date
+        const leaves = await Leave.find({ startDate: startDateWithoutTime });
+        console.log(leaves)
+
+        // Extract employee IDs from leaves
+        const leaveIds = leaves.map(leave => leave.userid);
+        console.log(leaveIds)
+
+        // Find employees with leave IDs
+        const employees = await Employee.find({ _id: { $in: leaveIds } });
+        console.log(employees)
+
+        // Extract employee IDs
+        const employeeIds = employees.map(employee => employee.empid);
+        console.log(employeeIds);
+
+        res.json({ leaves, employeeIds });
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance data' });
+    }
+});
+
 // POST request to add a suggested date to an existing leave request
 router.post('/:id/suggest-date', async (req, res) => {
     try {
@@ -2049,6 +2148,157 @@ router.put('/:id/suggest-date', async (req, res) => {
     }
 });
 
+router.post('/addWarning', async (req, res) => {
+    try {
+        const { empid, warning } = req.body;
+
+        // Find the employee by empid
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Add the warning to the employee's warnings array
+        employee.warnings.push(warning);
+
+        // Save the updated employee document
+        await employee.save();
+
+        // Return success response
+        return res.status(200).json({ message: 'Warning added successfully' });
+    } catch (error) {
+        console.error('Error adding warning:', error);
+        // Return error response
+        return res.status(500).json({ error: 'Failed to add warning' });
+    }
+});
+router.get('/getWarnings/:empid', async (req, res) => {
+    try {
+        // Get the employee ID from the route parameters
+        const { empid } = req.params;
+
+        // Find the employee by ID
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee not found' });
+        }
+
+        // If the employee has warnings, return them
+        if (employee.warnings && employee.warnings.length > 0) {
+            return res.status(200).json({ success: true, warnings: employee.warnings });
+        } else {
+            return res.status(200).json({ success: true, warnings: [] }); // No warnings found for the employee
+        }
+    } catch (error) {
+        console.error('Error fetching warnings:', error);
+        // Return error response
+        res.status(500).json({ success: false, error: 'Failed to fetch warnings' });
+    }
+});
+//reporttt
+router.get('/leave-report', async (req, res) => {
+    try {
+        const { month, department: selectedDepartment } = req.query; // Rename department to selectedDepartment
+
+        // Parse the month string to extract the year and month components
+        const [year, monthNumber] = month.split('-');
+
+        // Construct start and end dates for the month
+        const startDate = new Date(year, monthNumber - 1, 1); // Note: month is zero-based
+        const endDate = new Date(year, monthNumber, 0); // Last day of the month
+
+        // Fetch leave data for the specified month
+        const leaveData = await Leave.find({
+            startDate: { $gte: startDate },
+            endDate: { $lte: endDate }
+        });
+
+        // Extract unique user IDs from leave data
+        const userIds = [...new Set(leaveData.map(leave => leave.userid))];
+
+        // Fetch employee data for the extracted user IDs and matching department
+        const employees = await Employee.find({ _id: { $in: userIds }, department: selectedDepartment });
+
+        // Combine leave and employee data
+        const reportData = leaveData.map(leave => {
+            const employee = employees.find(emp => emp._id.toString() === leave.userid.toString());
+            if (employee && employee.department === selectedDepartment) {
+                return { leave, department: employee.department };
+            } else {
+                return null; // If employee department doesn't match selected department, return null
+            }
+        }).filter(entry => entry !== null); // Filter out null entries
+
+        // Respond with the fetched report data
+        res.json({ success: true, data: reportData });
+    } catch (error) {
+        // Handle errors
+        console.error('Error fetching leave report:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch leave report.' });
+    }
+});
+router.get('/leave-count-dep', async (req, res) => {
+    try {
+      const { department, month } = req.query;
+  
+      // Find all employees in the given department
+      const employees = await Employee.find({ department });
+  
+      // Extract employee IDs
+      const employeeIds = employees.map(emp => emp._id);
+  
+      // Parse month into year and month
+      const [year, monthNumber] = month.split('-');
+  
+      // Find all leaves for the given department and month
+      const leaves = await Leave.find({
+        userid: { $in: employeeIds },
+        startDate: {
+          $gte: new Date(year, monthNumber - 1, 1), // Start of the month
+          $lt: new Date(year, monthNumber, 1) // Start of next month
+        },
+        status: 'approved' // Consider only approved leaves
+      });
+  
+      // Initialize counters
+      let annualLeaveCount = 0;
+      let medicalLeaveCount = 0;
+      let generalLeaveCount = 0;
+  
+      // Count leave types
+      leaves.forEach(leave => {
+        switch (leave.Type) {
+          case 'Annual':
+            annualLeaveCount++;
+            break;
+          case 'Medical':
+            medicalLeaveCount++;
+            break;
+          case 'General':
+            generalLeaveCount++;
+            break;
+          default:
+            break;
+        }
+      });
+
+      console.log(annualLeaveCount,medicalLeaveCount,generalLeaveCount)
+  
+      // Send response with leave counts
+      res.json({
+        annualLeaveCount,
+        medicalLeaveCount,
+        generalLeaveCount
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
 
 
 
