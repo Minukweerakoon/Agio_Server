@@ -14,7 +14,7 @@ const inquirySchema = new mongoose.Schema({
         required: true
     },
     inquirydate: {
-        type: Date,
+        type: Date, 
         required: true
     },
     phoneNumber: {
@@ -27,16 +27,28 @@ const inquirySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Done'], 
+        enum: ['Pending', 'Done'],
         default: 'Pending'
     },
     reply: {
-        type: String 
+        type: String
+    },
+    inquiryID: {
+        type: String,
+        required: true,
+        unique: true
     }
-    
 }, {
     timestamps: true
 });
+
+// Middleware function to extract only the date part of inquirydate(not working)
+inquirySchema.pre('save', function(next) {
+    
+    this.inquirydate = this.inquirydate.toISOString().split('T')[0];
+    next();
+});
+
 
 const Inquiry = mongoose.model('Inquiry', inquirySchema);
 

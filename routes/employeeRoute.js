@@ -3,11 +3,15 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware2");
+const authmiddleware3 = require("../middleware/authmiddleware3");
 const Employee = require('../models/employeeModel');
 const authMiddleware2 = require("../middleware/authMiddleware2");
 const Leave = require('../models/leaveModel');
 const payment = require('../models/TraPymentModel');
 const Inquiry = require('../models/inquiryModel');
+const Attendance = require('../models/AttendanceModel');
+const attendanceModel = require('../models/AttendanceModel');
+const csvtojson = require('csvtojson');
 
 const booking = require('../models/TransportModel');
 const Dregister = require('../models/TraDriverModel');
@@ -16,8 +20,16 @@ const path = require('path')
 const Announcement = require('../models/AnnHRSupervisorModel');
 const AnnCal = require('../models/AnnCalModel')
 const upload = require('../middleware/upload');
+const uploadvideo = require('../middleware/uploadvideo');
 const Notice = require('../models/AnnCalFormModel')
 
+const generateInquiryID = () => {
+    const randomNumber = Math.floor(Math.random() * 100000);
+    const inquiryID = `INQ${randomNumber.toString().padStart(5, '0')}`;
+    return inquiryID;
+  };
+
+  
 
 
 
@@ -79,7 +91,7 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
             return res.status(200).send({ message: "Employee does not exist", success: false });
         } else {
             // Extract isAdmin value from the employee document
-            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave,warning} = employee;
 
 
 
@@ -103,16 +115,13 @@ router.post('/get-employee-info-by-id', authMiddleware2, async (req, res) => {
                 username: employee.username_log,
                 fullname:employee.fname,
                 password : employee.password_log,
-
-                _id: employee._id,
-
                 userid: employee._id,
                 empid :employee.empid,
-                department:employee.department
+                department:employee.department,
+                warning,
 
 
-
-                // Include other necessary fields here
+            
             } });
         }
     } catch (error) {
@@ -156,14 +165,14 @@ router.post("/leaveEmpform", authMiddleware2,upload.single('file') ,async (req, 
 
 router.get('/getleave', async (req, res) => {
     try {
-        const userid = req.query.userid; // Extract userId from query parameter
+        const userid = req.query.userid; 
         let leave;
         
         if (userid) {
-            // If userId is provided, filter leave details by userId
+            
             leave = await Leave.find({ userid });
         } else {
-            // If userId is not provided, fetch all leave details
+           
             leave = await Leave.find();
         }
 
@@ -231,8 +240,8 @@ router.get('/getleavedep', async (req, res) => {
         const employeeIds = employees.map(employee => employee._id);
         console.log(employeeIds); // Log the extracted employee IDs
         
-        // Fetch leave data for the found employee IDs
-        const leaveData = await Leave.find({ userid: { $in: employeeIds } }); 
+        // Fetch leave data for the found employee IDs with status "approved"
+        const leaveData = await Leave.find({ userid: { $in: employeeIds }, status: 'approved' }); 
         console.log(leaveData) // Log the fetched leave data
         
         res.json({ leave: leaveData });
@@ -241,6 +250,7 @@ router.get('/getleavedep', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch leave data' });
     }
 });
+
 
 router.get('/getleave3/:id', async (req, res) => {
     try {
@@ -259,12 +269,12 @@ router.get('/getleave3/:id', async (req, res) => {
 router.put('/updateleave/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, Type, RangePicker, department, Description } = req.body;
+        const { name, Type, startDate, endDate, department, Description } = req.body;
 
-        // Assuming Announcement is a Mongoose model
+        // Assuming Leave is a Mongoose model
         const updatedleave = await Leave.findByIdAndUpdate(
             id,
-            { name, Type, RangePicker, department, Description },
+            { name, Type, startDate, endDate, department, Description },
             { new: true } // To return the updated document
         );
 
@@ -452,9 +462,48 @@ router.delete('/deleteleave/:id', async (req, res) => {
 
 
 
-
 //announcments
-router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
+router.post('/AnnHRsup2', authMiddleware2, upload.single('video'), async (req, res) => {
+    try {
+      // Check if 'video' key exists in req.file
+      if (!req.file) {
+        throw new Error('Video is required');
+      }
+
+      // Extract video from request
+      const video = req.file;
+      
+      // Create a new announcement with the request body and video information
+      const announcement = new Announcement({
+        ...req.body,
+        video: video ? video.filename : null
+      });
+    
+      await announcement.save();
+    
+      // Create the notification object
+      const notification = {
+        type: "New announcement update",
+        message: `New announcement: ${announcement.anntitle}`,
+        data: {
+          announcementId: announcement._id,
+          announcementName: announcement.anntitle
+        },
+        onclickpath: "/" // Update this path as necessary
+      };
+    
+      // Update all employees with the new notification
+      await Employee.updateMany({}, { $push: { unseenNotifications: notification } });
+    
+      res.status(200).send({ message: "Announcement uploaded successfully and notifications sent to all employees.", success: true, announcement });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
+    }
+  });
+
+  
+  router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res) => {
     try {
         const file = req.file
         // Create a new announcement with the request body and file information
@@ -485,6 +534,28 @@ router.post('/AnnHRsup', authMiddleware2, upload.single('file'), async (req, res
         res.status(500).send({ message: "Announcement upload unsuccessful.", success: false, error });
     }
 });
+router.get('/AnnHRsupReport/month', async (req, res) => {
+    try {
+        const { month } = req.query; // Expected format 'YYYY-MM'
+        const startDate = new Date(month + '-01'); // Start of the month
+        const endDate = new Date(month + '-01');
+        endDate.setMonth(endDate.getMonth() + 1); // One month after the start date
+
+        const announcements = await Announcement.find({
+            uploaddate: {
+                $gte: startDate,
+                $lt: endDate
+            }
+        });
+        res.status(200).json(announcements);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error fetching announcements for the month.", error });
+    }
+});
+
+
+
 router.get('/getAnnHRsup', async (req, res) => {
     try {
         const announcements = await Announcement.find();
@@ -532,6 +603,8 @@ router.get('/getAnnHRsupSpecific', async (req, res) => {
         res.status(500).send({ message: "Failed to retrieve announcements.", success: false, error });
     }
 });
+
+
 router.get('/getAnnHRsup2/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -602,53 +675,65 @@ router.get('/announcement/:type', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
-
     }
 });
-
-
-
-
-router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
-    const { announcementId } = req.params;
-    const { text } = req.body;
-
-    if (!text) {
-        return res.status(400).json({ success: false, message: 'Comment text is required' });
-    }
-
+// Assuming you have a comments collection or a way to fetch comments from your database
+router.get('/comments', async (req, res) => {
     try {
-        // Find the announcement by ID
-        const announcement = await Announcement.findById(announcementId);
-
-        if (!announcement) {
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
-        }
-
-        // Add the comment to the announcement's comments array
-        announcement.comments.push({
-            text,
-            author: req.user.username, // Assuming you have authentication middleware that provides the user
-            createdAt: new Date(),
-        });
-
-        // Save the updated announcement
-        await announcement.save();
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+      const comments = await Announcement.find();
+      res.status(200).json(comments);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-
+      res.status(500).send(error.message);
     }
-});
+  });
+  
+
+
+
+
+// router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
+//     const { announcementId } = req.params;
+//     const { text } = req.body;
+
+//     if (!text) {
+//         return res.status(400).json({ success: false, message: 'Comment text is required' });
+//     }
+
+//     try {
+//         // Find the announcement by ID
+//         const announcement = await Announcement.findById(announcementId);
+
+//         if (!announcement) {
+//             return res.status(404).json({ success: false, message: 'Announcement not found' });
+//         }
+
+//         // Add the comment to the announcement's comments array
+//         announcement.comments.push({
+//             text,
+//             author: req.user.username, // Assuming you have authentication middleware that provides the user
+//             createdAt: new Date(),
+//         });
+
+//         // Save the updated announcement
+//         await announcement.save();
+
+//         res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comments[announcement.comments.length - 1] });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+
+//     }
+// });
 
 
 
 
 router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
     const { announcementId } = req.params;
-    const { text } = req.body;
+    const { text, empId } = req.body;
+
+    console.log(empId);
+    console.log(req.body);
 
     if (!text) {
         return res.status(400).json({ success: false, message: 'Comment text is required' });
@@ -659,26 +744,37 @@ router.post('/comments/:announcementId', authMiddleware2, async (req, res) => {
         const announcement = await Announcement.findById(announcementId);
 
         if (!announcement) {
+            // If the announcement doesn't exist, return an error immediately.
             return res.status(404).json({ success: false, message: 'Announcement not found' });
         }
 
+        // Ensure the announcement has an initialized comments array
+        if (!announcement.comment) {
+            announcement.comment = [];
+        }
+
         // Add the comment to the announcement's comments array
-        announcement.comment.push({
+        const newComment = {
             text,
-             // Assuming you have authentication middleware that provides the user
+            empId, // employee ID from the request
             createdAt: new Date(),
-        });
+        };
+
+        console.log(newComment);
+
+        announcement.comment.push(newComment);
 
         // Save the updated announcement
         await announcement.save();
         
-
-        res.status(201).json({ success: true, message: 'Comment added successfully', comment: announcement.comment[announcement.comment.length - 1] });
+        // Return the latest comment added along with a success message
+        res.status(201).json({ success: true, message: 'Comment added successfully', comment: newComment });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+
 router.post('/AnnCalNotice', async (req, res) => {
     try {
         
@@ -704,7 +800,7 @@ router.get('/event', async (req, res) => {
 });
 router.delete('/deletevent/:id', async (req, res) => {
     try {
-        
+        const { id } = req.params;
         // Assuming EventModel is your model for the events collection
         const event = await Notice.findByIdAndDelete(req.params.id);
 
@@ -728,64 +824,150 @@ router.delete('/deletevent/:id', async (req, res) => {
         });
     }
 });
-// PUT endpoint to update an event
-router.put('/updatevent/:id', async (req, res) => {
-    const { id } = req.params;
-    const { title, description, submission, expiryDate } = req.body;
+// router.delete('/siyathugoiya/:id', async (req, res) => {
+//     try {
+//         const updatedEvent = await Notice.findByIdAndUpdate(id, {
+//             title,
+//             description,
+//             submission,
+//             expiryDate
+//         }, { new: true });
 
-    if (!id) {
-        return res.status(400).send({ message: "Event ID is required", success: false });
+//         if (!updatedEvent) {
+//             return res.status(404).send({ message: "Event not found.", success: false });
+//         }
+
+//         res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+//     } catch (error) {
+//         console.error('Failed to update the event:', error);
+//         res.status(500).send({ message: "Failed to update event.", success: false, error });
+//     }
+// });
+// Assuming express is already set up with router
+
+router.post('/rsvp/:eventId', authMiddleware2, async (req, res) => {
+    const { eventId } = req.params;
+    const { choice, empId,department } = req.body;
+
+    console.log(eventId)
+
+    if (!choice) {
+        return res.status(400).json({ success: false, message: 'RSVP choice is required' });
     }
 
     try {
-        const updatedEvent = await Notice.findByIdAndUpdate(id, {
-            title,
-            description,
-            submission,
-            expiryDate
-        }, { new: true });
-
-        if (!updatedEvent) {
-            return res.status(404).send({ message: "Event not found.", success: false });
+        const event = await Notice.findById(eventId); // Make sure to replace `Event` with your actual model
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
         }
 
-        res.status(200).send({ message: "Event updated successfully", success: true, event: updatedEvent });
+        if (!event.response) {
+            event.response = [];
+        }
+
+        const newResponse = {
+            choice,
+            empId,
+            department,
+            createdAt: new Date(),
+        };
+
+        event.response.push(newResponse);
+        await event.save();
+        
+        res.status(201).json({ success: true, message: 'RSVP submitted successfully', response: newResponse });
     } catch (error) {
-        console.error('Failed to update the event:', error);
-        res.status(500).send({ message: "Failed to update event.", success: false, error });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+router.get('/:noticeId/choiceCount', async (req, res) => {
+    const { noticeId } = req.params;
+
+    try {
+        // Find the notice by ID
+        const notice = await Notice.findById(noticeId);
+
+        if (!notice) {
+            return res.status(404).json({ message: 'Notice not found' });
+        }
+
+        // Count occurrences of the word "in" in response choices
+        const choiceCount = notice.response.reduce((count, response) => {
+            // Check if the choice includes the word "in"
+            if (response.choice.includes('in')) {
+                return count + 1;
+            }
+            return count;
+        }, 0);
+
+        res.json({ count: choiceCount });
+    } catch (error) {
+        console.error('Error fetching notice:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
 
+
+
+
+
+
+////////////////////////////////////////// Inquiry Route ////////////////////////////////////////////////////////////////
+
+//  new inquiry
 router.post('/inquiry', async (req, res) => {
     try {
-        
-        const inquiry = new Inquiry (req.body);
-        await inquiry.save();
-        res.status(200).send({ message: "Inquiry uploaded Successfully", success: true });
+      const inquiryID = generateInquiryID();
+      const inquiry = new Inquiry({
+        inquiryID,
+        ...req.body
+      });
+      await inquiry.save();
+      const inqman = await Employee.findOne({isinquiry:true})
+      const unseenNotifications = inqman.unseenNotifications
+      unseenNotifications.push({
+        type:"New inquiry request",
+        message :`${ inquiry.username} has submitted an inquiry`,
+        data:{
+            inqid:inquiry._id,
+            name: inquiry.name
+        },
+        onclickpath:"/"
+
+    })
+    await Employee.findByIdAndUpdate(inqman._id,{unseenNotifications});
+
+  
+      res.status(200).send({ message: "Inquiry uploaded successfully", success: true });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Inquiry upload unsuccessful.", success: false, error });
+      console.error("Error uploading inquiry:", error);
+      res.status(500).send({ message: "Inquiry upload unsuccessful", success: false, error: error.message });
+    }
+  });
+
+  router.get('/my-inquiries/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        const inquiries = await Inquiry.find({ username }); // Fetch inquiries 
+        const inquiriesWithID = inquiries.map(inquiry => ({
+            ...inquiry.toJSON(),
+            inquiryID: inquiry.inquiryID 
+        }));
+        res.status(200).json(inquiriesWithID);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to fetch inquiries.' });
     }
 });
 
-router.get('/my-inquiries/:username', async (req, res) => {
-    try {
-      const { username } = req.params;
-      const inquiries = await Inquiry.find({ username }); // Fetch inquiries for the provided username
-      res.status(200).json(inquiries);
-      console.log(inquiries);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to fetch inquiries.' });
-    }
-  });
-  
+
   // Update inquiry status
   router.put('/updateinquiry/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedFields = req.body; // Assuming the request body contains the fields to be updated
+        const updatedFields = req.body; 
         const inquiry = await Inquiry.findByIdAndUpdate(id, updatedFields, { new: true });
         if (!inquiry) {
             return res.status(404).json({ message: "Inquiry not found.", success: false });
@@ -818,7 +1000,7 @@ router.delete('/deleteinquiry/:id', async (req, res) => {
 
 router.get('/all-inquiries', async (req, res) => {
     try {
-      const inquiries = await Inquiry.find(); // Fetch all inquiries
+      const inquiries = await Inquiry.find(); // Fetching the inquiries from here
       res.status(200).json(inquiries);
       console.log(inquiries);
     } catch (error) {
@@ -846,10 +1028,10 @@ router.put('/inquiry/:id/reply', async (req, res) => {
     const { reply } = req.body;
   
     try {
-      // Find the inquiry by ID and update the reply field
+      
       const inquiry = await Inquiry.findByIdAndUpdate(
         id,
-        { reply, status: 'Done' }, // Update reply and set status to 'Done'
+        { reply, status: 'Done' }, 
         { new: true }
       );
       
@@ -861,53 +1043,48 @@ router.put('/inquiry/:id/reply', async (req, res) => {
   });
   
   
-  module.exports = router;
+ 
 
-
-
-
-
-
-
-
-
+////////////////////////////////////////// End Inquiry Route ////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////// Transport Route ////////////////////////////////////////////////////////////////
+
+
+
 
 
 // POST a new Booking
 router.post("/TraBooking", authMiddleware2, async (req, res) => {
     try {
-        const Booking = new booking({...req.body ,status :"pending"})
+        const { Type } = req.body;
+        const Booking = new booking({ ...req.body, status: "pending" });
         await Booking.save();
-        const logistic = await Employee.findOne({islogisticsMan:true})
-        const unseenNotifications = logistic.unseenNotifications
-        unseenNotifications.push({
-            type:"New leave request",
-            message :`${ Booking.EmpName} has submitted a Booking request`,
-            data:{
-                bookingid:Booking._id,
-                name: Booking.EmpName,
-            },
-            onclickpath:"/"
 
-        }
+        // Update seat count based on the vehicle type
+        const vehicleType = Type.toLowerCase();
+        const totalSeats = { bus: 100, van: 24 }; // Assuming lowercase vehicle types
+        const updatedRemainingSeats = { ...totalSeats };
 
-        )
-        await Employee.findByIdAndUpdate(logistic._id,{unseenNotifications});
-        res.status(200).send(
-            {
-                success:true,
-                 message: "Booking submission successful.",
-            }
-        );
+        // Update remaining seats count
+        const vehicles = await Vregister.find({ type: vehicleType });
+        const numOfVehicles = vehicles.length;
+        updatedRemainingSeats[vehicleType] = totalSeats[vehicleType] * numOfVehicles;
 
-        
+        // Send updated seat count in response
+        res.status(200).send({
+            success: true,
+            message: "Booking submission successful.",
+            remainingSeats: updatedRemainingSeats,
+        });
+
+        // Your remaining logic for notifications goes here...
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Error Submitting Booking request", success: false, error });
     }
 });
+
+
 
 // read Admin
 router.get('/getTraBooking', async (req, res) => {
@@ -916,10 +1093,10 @@ router.get('/getTraBooking', async (req, res) => {
         let bookings;
         
         if (userid) {
-            // If userId is provided, filter leave details by userId
+            // If userId is provided, filter Bokking details by userId
             bookings = await booking.find({ userid });
         } else {
-            // If userId is not provided, fetch all leave details
+            // If userId is not provided, fetch all Booking details
             bookings = await booking.find();
         }
 
@@ -993,7 +1170,7 @@ router.put('/updateTraBooking/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: "Leave not found." });
         }
 
-        res.json({ success: true, message: "Leave updated successfully.", bookings: updatedBooking });
+        res.json({ success: true, message: "Booking updated successfully.", bookings: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -1043,25 +1220,20 @@ const unseenNotifications = user.unseenNotifications
 
 
 // DELETE Booking
- router.delete('/deletebooking/:id', async (req, res) => {
+router.delete('/deletebooking/:id', async (req, res) => {
+    console.log("delete roue")
+    console.log(req.params.id)
     try {
         const bookings = await booking.findByIdAndDelete(req.params.id);
-         if (!bookings) {
-             return res.status(404).send({ message: "Booking not found.", success: false });
-         }
-         res.status(200).send({ message: "Booking deleted successfully", success: true });
-     } catch (error) {
-         console.log(error);
-         res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
-     }
- });
-
-
- 
-
-
-
-
+        if (!bookings) {
+            return res.status(404).send({ message: "Booking not found.", success: false });
+        }
+        res.status(200).send({ message: "Booking deleted successfully", success: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Failed to delete Booking.", success: false, error });
+    }
+});
 
 
 // Driver Register
@@ -1141,19 +1313,33 @@ router.delete('/deletedrivers/:id', async (req, res) => {
 
 
 
-
 // vehicle Register
+// Vehicle Register
 router.post('/Vehicleregister', async (req, res) => {
     try {
-        
-        const VehicleRegister = new Vregister (req.body);
-        await VehicleRegister.save();
-        res.status(200).send({ message: " Vehicle Register Successfully", success: true });
+        let numSeats;
+        if (req.body.Type === 'bus') {
+            numSeats = 100 * req.body.numBuses; 
+        } else if (req.body.Type === 'van') {
+            numSeats = 24 * req.body.numVans; 
+        }
+
+        const vehicleRegister = new Vregister({ ...req.body, numSeats });
+        await vehicleRegister.save();
+
+        // Update total seat count based on the type of vehicle
+        const totalSeats = { bus: 100, van: 24 }; 
+        const updatedTotalSeats = { ...totalSeats };
+        updatedTotalSeats[req.body.Type] += numSeats;
+
+        res.status(200).send({ message: "Vehicle Registered Successfully", success: true, totalSeats: updatedTotalSeats });
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ message: "Vehicle Register unsuccessful.", success: false, error });
+        console.error(error);
+        res.status(500).send({ message: "Vehicle Registration Unsuccessful.", success: false, error });
     }
 });
+
+
 
 // read Vehicle register
 router.get('/getVehicles', async (req, res) => {
@@ -1215,10 +1401,10 @@ router.put('/updatevehicles/:id', async (req, res) => {
      }
  });
 
-
+// Payment booking slip upload
  router.use('/uploads1', express.static(path.join(__dirname, '../uploads1')));
 
-// Payment booking slip upload
+
 router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1234,7 +1420,14 @@ router.post('/PaymentUpload', upload.single('file'), async (req, res) => {
     }
 });
 
-module.exports = router;
+
+
+
+
+
+
+
+
 
 
 
@@ -1795,6 +1988,334 @@ router.get('/yearly-annual-leaves', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+router.post('/get-employee-comment-info-by-id/:id', async (req, res) => {
+    const oid = req.params.id;
+    try {
+        const employee = await Employee.findOne({ _id: oid });
+        if (!employee) {
+            return res.status(200).send({ message: "Employee does not exist", success: false });
+        } else {
+            // Extract isAdmin value from the employee document
+            const { isAdmin, isDoctor, isAnnHrsup, isLeaveHrsup, islogisticsMan, isuniform, isinsu, isinquiry, isperfomace, seenNotifications, unseenNotifications ,medical_leave,annual_leave,general_leave} = employee;
+
+
+
+
+            // Send response with isAdmin value and other data
+            res.status(200).send({ success: true, data: { 
+                isAdmin,
+                isAnnHrsup,
+                isDoctor,
+                isLeaveHrsup,
+                islogisticsMan,
+                isuniform,
+                isinsu,
+                isinquiry,
+                isperfomace,
+                seenNotifications,
+                unseenNotifications,
+                medical_leave,
+                annual_leave,
+                general_leave,
+                username: employee.username_log,
+                fullname:employee.fname,
+                password : employee.password_log,
+                userid: employee._id,
+                empid :employee.empid,
+                department:employee.department
+
+
+                // Include other necessary fields here
+            } });
+        }
+    } catch (error) {
+        res.status(500).send({ message: "Error getting user info", success: false, error });
+    }
+});
+
+//attendance
+
+
+router.post("/uploadexcelattendance", upload.single("csvFile"), async (req, res) => {
+    try {
+        const jsonArray = await csvtojson().fromFile(req.file.path);
+
+        // Loop through each attendance record from the CSV file
+        for (const attendance of jsonArray) {
+            // Generate a unique identifier for each attendance record
+            const uniqueEmpId = `${attendance.empid}_${Date.now()}`;
+        
+            // Set the new unique identifier
+            attendance.empid = uniqueEmpId;
+        
+            // Insert the attendance record into the database
+            await attendanceModel.create(attendance);
+        }
+        return res.json({ message: "Data added successfully" });
+    } catch (error) {
+        console.error('Error uploading attendance data:', error);
+        return res.status(500).json({ error: 'Failed to upload attendance data. Please try again later.' });
+    }
+});
+
+
+
+//read attendance
+router.get('/attendance', async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        // Find attendance records for the specified date
+        const attendanceData = await Attendance.find({ createdAt: { $gte: new Date(date), $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) } });
+        
+        res.json({ attendance: attendanceData });
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance data' });
+    }
+});
+router.get('/attendance_leave', async (req, res) => {
+    try {
+        const date = req.query.date; // Date parameter from the query string
+        console.log(date);
+        
+        // Convert the date string to a Date object
+        const startDate = new Date(date);
+
+        // Extract the date portion without the time
+        const startDateWithoutTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+
+        // Find leaves with the specified start date
+        const leaves = await Leave.find({ startDate: startDateWithoutTime });
+        console.log(leaves)
+
+        // Extract employee IDs from leaves
+        const leaveIds = leaves.map(leave => leave.userid);
+        console.log(leaveIds)
+
+        // Find employees with leave IDs
+        const employees = await Employee.find({ _id: { $in: leaveIds } });
+        console.log(employees)
+
+        // Extract employee IDs
+        const employeeIds = employees.map(employee => employee.empid);
+        console.log(employeeIds);
+
+        res.json({ leaves, employeeIds });
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance data' });
+    }
+});
+
+// POST request to add a suggested date to an existing leave request
+router.post('/:id/suggest-date', async (req, res) => {
+    try {
+        const leaveId = req.params.id; // Extract the leave ID from the request parameters
+        const { suggestedDate } = req.body; // Extract the suggested date from the request body
+
+        // Find the leave request by its ID
+        const leaveRequest = await Leave.findById(leaveId);
+
+        if (!leaveRequest) {
+            return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Update the suggested date field
+        leaveRequest.suggestedDate = suggestedDate;
+
+        // Save the updated leave request to the database
+        const updatedLeaveRequest = await leaveRequest.save();
+
+        // Respond with the updated leave request
+        res.status(200).json(updatedLeaveRequest);
+    } catch (error) {
+        // If an error occurs, respond with an error message
+        console.error("Error adding suggested date to leave request:", error);
+        res.status(500).json({ message: "Failed to add suggested date to leave request" });
+    }
+});
+
+router.put('/:id/suggest-date', async (req, res) => {
+    try {
+        const leaveId = req.params.id; // Extract the leave ID from the request parameters
+        const { suggestedDate } = req.body; // Extract the suggested date from the request body
+
+        // Find the leave request by its ID
+        const leaveRequest = await Leave.findById(leaveId);
+
+        if (!leaveRequest) {
+            return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Update the suggested date field
+        leaveRequest.suggestedDate = suggestedDate;
+
+        // Save the updated leave request to the database
+        const updatedLeaveRequest = await leaveRequest.save();
+
+        // Respond with the updated leave request
+        res.status(200).json(updatedLeaveRequest);
+    } catch (error) {
+        // If an error occurs, respond with an error message
+        console.error("Error updating suggested date of leave request:", error);
+        res.status(500).json({ message: "Failed to update suggested date of leave request" });
+    }
+});
+
+router.post('/addWarning', async (req, res) => {
+    try {
+        const { empid, warning } = req.body;
+
+        // Find the employee by empid
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Add the warning to the employee's warnings array
+        employee.warnings.push(warning);
+
+        // Save the updated employee document
+        await employee.save();
+
+        // Return success response
+        return res.status(200).json({ message: 'Warning added successfully' });
+    } catch (error) {
+        console.error('Error adding warning:', error);
+        // Return error response
+        return res.status(500).json({ error: 'Failed to add warning' });
+    }
+});
+router.get('/getWarnings/:empid', async (req, res) => {
+    try {
+        // Get the employee ID from the route parameters
+        const { empid } = req.params;
+
+        // Find the employee by ID
+        const employee = await Employee.findOne({ empid });
+
+        // If employee is not found, return 404 status
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee not found' });
+        }
+
+        // If the employee has warnings, return them
+        if (employee.warnings && employee.warnings.length > 0) {
+            return res.status(200).json({ success: true, warnings: employee.warnings });
+        } else {
+            return res.status(200).json({ success: true, warnings: [] }); // No warnings found for the employee
+        }
+    } catch (error) {
+        console.error('Error fetching warnings:', error);
+        // Return error response
+        res.status(500).json({ success: false, error: 'Failed to fetch warnings' });
+    }
+});
+//reporttt
+router.get('/leave-report', async (req, res) => {
+    try {
+        const { month, department: selectedDepartment } = req.query; // Rename department to selectedDepartment
+
+        // Parse the month string to extract the year and month components
+        const [year, monthNumber] = month.split('-');
+
+        // Construct start and end dates for the month
+        const startDate = new Date(year, monthNumber - 1, 1); // Note: month is zero-based
+        const endDate = new Date(year, monthNumber, 0); // Last day of the month
+
+        // Fetch leave data for the specified month
+        const leaveData = await Leave.find({
+            startDate: { $gte: startDate },
+            endDate: { $lte: endDate }
+        });
+
+        // Extract unique user IDs from leave data
+        const userIds = [...new Set(leaveData.map(leave => leave.userid))];
+
+        // Fetch employee data for the extracted user IDs and matching department
+        const employees = await Employee.find({ _id: { $in: userIds }, department: selectedDepartment });
+
+        // Combine leave and employee data
+        const reportData = leaveData.map(leave => {
+            const employee = employees.find(emp => emp._id.toString() === leave.userid.toString());
+            if (employee && employee.department === selectedDepartment) {
+                return { leave, department: employee.department };
+            } else {
+                return null; // If employee department doesn't match selected department, return null
+            }
+        }).filter(entry => entry !== null); // Filter out null entries
+
+        // Respond with the fetched report data
+        res.json({ success: true, data: reportData });
+    } catch (error) {
+        // Handle errors
+        console.error('Error fetching leave report:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch leave report.' });
+    }
+});
+router.get('/leave-count-dep', async (req, res) => {
+    try {
+      const { department, month } = req.query;
+  
+      // Find all employees in the given department
+      const employees = await Employee.find({ department });
+  
+      // Extract employee IDs
+      const employeeIds = employees.map(emp => emp._id);
+      console.log(employeeIds)
+  
+      // Parse month into year and month
+      const [year, monthNumber] = month.split('-');
+  
+      // Find all leaves for the given department and month
+      const leaves = await Leave.find({
+        userid: { $in: employeeIds },
+        startDate: {
+          $gte: new Date(year, monthNumber - 1, 1), // Start of the month
+          $lt: new Date(year, monthNumber, 1) // Start of next month
+        },
+        status: 'approved' // Consider only approved leaves
+      });
+  
+      // Initialize counters
+      let annualLeaveCount = 0;
+      let medicalLeaveCount = 0;
+      let generalLeaveCount = 0;
+  
+      // Count leave types
+      leaves.forEach(leave => {
+        switch (leave.Type) {
+          case 'Annual':
+            annualLeaveCount++;
+            break;
+          case 'Medical':
+            medicalLeaveCount++;
+            break;
+          case 'General':
+            generalLeaveCount++;
+            break;
+          default:
+            break;
+        }
+      });
+
+      console.log(annualLeaveCount,medicalLeaveCount,generalLeaveCount)
+  
+      // Send response with leave counts
+      res.json({
+        annualLeaveCount,
+        medicalLeaveCount,
+        generalLeaveCount
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server Error' });
+    }
+  });
 
 
 

@@ -1,4 +1,4 @@
-// UniformShirtRoute.js
+
 
 const express = require('express');
 const router = express.Router();
@@ -54,7 +54,7 @@ router.put('/:id', async (req, res) => {
       const updatedShirt = await UniformShirt.findByIdAndUpdate(
         id,
         { size, quantity },
-        { new: true } // To return the updated document
+        { new: true } 
       );
   
       if (!updatedShirt) {
